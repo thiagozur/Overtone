@@ -20,6 +20,7 @@ OvertoneAudioProcessor::OvertoneAudioProcessor()
     decayParam = apvts.getRawParameterValue ("decay");
     sustainParam = apvts.getRawParameterValue ("sustain");
     releaseParam = apvts.getRawParameterValue ("release");
+    noiseSourceParam = apvts.getRawParameterValue ("noise_source");
     
     for (int i = 0; i < numHarmonics; ++i)
     {
@@ -37,10 +38,25 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
+    juce::StringArray sourceChoices {
+        "Bosque",
+        "Lluvia",
+        "Arroyo",
+        "VHS",
+        "Vinilo",
+        "Ruido Importado"
+    };
+    params.push_back (std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { "noise_source", 1 },
+        "Noise Source",
+        sourceChoices,
+        0
+    ));
+
     params.push_back (std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID { "master_gain", 1 },
         "Master Gain",
-        juce::NormalisableRange<float>(-48.0f, 6.0f, 0.1f),
+        juce::NormalisableRange<float>(-48.0f, 24.0f, 0.1f),
         0.0f,
         juce::AudioParameterFloatAttributes().withLabel ("dB")
     ));
@@ -96,6 +112,40 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
     return { params.begin(), params.end() };
 }
 
+bool OvertoneAudioProcessor::loadCustomNoiseFile (const juce::File& file)
+{
+    return customSamplePlayer.loadFromFile (file, currentSampleRate);
+}
+
+void OvertoneAudioProcessor::updateNoiseSourceSelection (int choice)
+{
+    if (choice == currentSourceChoice)
+        return;
+    
+    currentSourceChoice = choice;
+
+    switch (choice)
+    {
+        case 0:
+            factorySamplePlayer.loadFromMemory (BinaryData::birds_wav, BinaryData::birds_wavSize, currentSampleRate);
+            break;
+        case 1:
+            factorySamplePlayer.loadFromMemory (BinaryData::rain_wav, BinaryData::rain_wavSize, currentSampleRate);
+            break;
+        case 2:
+            factorySamplePlayer.loadFromMemory (BinaryData::river_wav, BinaryData::river_wavSize, currentSampleRate);
+            break;
+        case 3:
+            factorySamplePlayer.loadFromMemory (BinaryData::vhs_wav, BinaryData::vhs_wavSize, currentSampleRate);
+            break;
+        case 4:
+            factorySamplePlayer.loadFromMemory (BinaryData::vinyl_wav, BinaryData::vinyl_wavSize, currentSampleRate);
+            break;
+        case 5:
+            break;
+    }
+}
+
 const juce::String OvertoneAudioProcessor::getName() const
 {
     return JucePlugin_Name;
@@ -143,29 +193,19 @@ int OvertoneAudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void OvertoneAudioProcessor::setCurrentProgram (int index)
+void OvertoneAudioProcessor::setCurrentProgram (int /* index */)
 {
 
 }
 
-const juce::String OvertoneAudioProcessor::getProgramName (int index)
+const juce::String OvertoneAudioProcessor::getProgramName (int /* index */)
 {
     return {};
 }
 
-void OvertoneAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void OvertoneAudioProcessor::changeProgramName (int /* index */, const juce::String& /* newName */)
 {
 
-}
-
-void OvertoneAudioProcessor::triggerNoteOn()
-{
-    adsr.noteOn();
-}
-
-void OvertoneAudioProcessor::triggerNoteOff()
-{
-    adsr.noteOff();
 }
 
 void OvertoneAudioProcessor::updateFilterCoefficients (float baseFrequencyHz, float currentQ)
@@ -258,6 +298,9 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 {
     juce::ScopedNoDenormals noDenormals;
 
+    int sourceChoice = static_cast<int>(noiseSourceParam->load());
+    updateNoiseSourceSelection (sourceChoice);
+
     keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
     
     for (const auto metadata : midiMessages)
@@ -306,8 +349,18 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     {
         float env = adsr.getNextSample();
 
-        float noiseL = random.nextFloat() * 2.0f - 1.0f;
-        float noiseR = random.nextFloat() * 2.0f - 1.0f;
+        float noiseL = 0.0f;
+        float noiseR = 0.0f;
+
+        if (sourceChoice >= 0 && sourceChoice <= 4)
+            factorySamplePlayer.getNextSample (noiseL, noiseR);
+        else if (sourceChoice == 5 && customSamplePlayer.hasSampleLoaded())
+            customSamplePlayer.getNextSample (noiseL, noiseR);
+        else
+        {
+            noiseL = random.nextFloat() * 2.0f - 1.0f;
+            noiseR = random.nextFloat() * 2.0f - 1.0f;
+        }
 
         float harmonicSumL = 0.0f;
         float harmonicSumR = 0.0f;

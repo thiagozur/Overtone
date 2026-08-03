@@ -15,6 +15,9 @@ public:
 private:
     OvertoneAudioProcessor& audioProcessor;
 
+    juce::TextButton loadFileButton { "Cargar archivo de ruido" };
+    std::unique_ptr<juce::FileChooser> fileChooser;
+
     juce::MidiKeyboardComponent keyboardComponent;
     juce::GenericAudioProcessorEditor genericEditor;
 

@@ -38,14 +38,26 @@ target_sources(Overtone PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.h
     Source/PluginEditor.cpp
+    Source/Tools/SampleLoopPlayer.h
+)
+
+juce_add_binary_data(FactoryAudioData
+    SOURCES
+        Resources/Noise/birds.wav
+        Resources/Noise/rain.wav
+        Resources/Noise/river.wav
+        Resources/Noise/vhs.wav
+        Resources/Noise/vinyl.wav
 )
 
 target_link_libraries(Overtone
     PRIVATE
+        FactoryAudioData
         juce::juce_audio_utils
         juce::juce_audio_processors
         juce::juce_dsp
         juce::juce_gui_basics
+        juce::juce_audio_formats
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
+#include "Tools/SampleLoopPlayer.h"
 
 class OvertoneAudioProcessor  : public juce::AudioProcessor
 {
@@ -32,8 +33,7 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    void triggerNoteOn();
-    void triggerNoteOff();
+    bool loadCustomNoiseFile (const juce::File& file);
 
     juce::AudioProcessorValueTreeState apvts;
 
@@ -66,6 +66,13 @@ private:
     std::atomic<float>* decayParam { nullptr };
     std::atomic<float>* sustainParam { nullptr };
     std::atomic<float>* releaseParam { nullptr };
+
+    void updateNoiseSourceSelection (int choice);
+    SampleLoopPlayer factorySamplePlayer;
+    SampleLoopPlayer customSamplePlayer;
+    int currentSourceChoice = -1;
+
+    std::atomic<float>* noiseSourceParam { nullptr };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OvertoneAudioProcessor)
 };
