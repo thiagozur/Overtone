@@ -1,4 +1,4 @@
-#include "PluginProcessor.h"
+﻿#include "PluginProcessor.h"
 #include "PluginEditor.h"
 
 OvertoneAudioProcessor::OvertoneAudioProcessor()
@@ -168,7 +168,7 @@ void OvertoneAudioProcessor::triggerNoteOff()
     adsr.noteOff();
 }
 
-void OvertoneAudioProcessor::updateFilterCoefficients (float currentQ)
+void OvertoneAudioProcessor::updateFilterCoefficients (float baseFrequencyHz, float currentQ)
 {
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = currentSampleRate;
@@ -177,7 +177,7 @@ void OvertoneAudioProcessor::updateFilterCoefficients (float currentQ)
 
     for (int i = 0; i < numHarmonics; ++i)
     {
-        float harmonicFreq = baseFreqC4 * (i + 1);
+        float harmonicFreq = baseFrequencyHz * (i + 1);
 
         if (harmonicFreq < currentSampleRate * 0.49f)
         {
@@ -192,6 +192,7 @@ void OvertoneAudioProcessor::updateFilterCoefficients (float currentQ)
         }
     }
 
+    currentBaseFreq = baseFrequencyHz;
     cachedQ = currentQ;
 }
 
@@ -210,7 +211,7 @@ void OvertoneAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
 
     for (int i = 0; i < numHarmonics; ++i)
     {
-        float harmonicFreq = baseFreqC4 * (i + 1);
+        float harmonicFreq = currentBaseFreq * (i + 1);
 
         if (harmonicFreq < sampleRate * 0.49f)
         {
@@ -257,11 +258,18 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 {
     juce::ScopedNoDenormals noDenormals;
 
+    keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
+    
     for (const auto metadata : midiMessages)
     {
         auto msg = metadata.getMessage();
         if (msg.isNoteOn())
+        {
+            int noteNumber = msg.getNoteNumber();
+            float frequencyHz = static_cast<float>(juce::MidiMessage::getMidiNoteInHertz (noteNumber));
+            updateFilterCoefficients (frequencyHz, qParam->load());
             adsr.noteOn();
+        }
         else if (msg.isNoteOff())
             adsr.noteOff();
     }
@@ -274,7 +282,7 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
     float targetQ = qParam->load();
     if (std::abs (targetQ - cachedQ) > 0.01f)
-        updateFilterCoefficients (targetQ);
+        updateFilterCoefficients (currentBaseFreq, targetQ);
 
     adsrParams.attack = attackParam->load();
     adsrParams.decay = decayParam->load();

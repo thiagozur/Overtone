@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
@@ -15,7 +15,7 @@ public:
 private:
     OvertoneAudioProcessor& audioProcessor;
 
-    juce::TextButton triggerButton { "Play C4 Note" };
+    juce::MidiKeyboardComponent keyboardComponent;
     juce::GenericAudioProcessorEditor genericEditor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OvertoneAudioProcessorEditor)

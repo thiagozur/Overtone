@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <JuceHeader.h>
 
@@ -37,9 +37,11 @@ public:
 
     juce::AudioProcessorValueTreeState apvts;
 
+    juce::MidiKeyboardState keyboardState;
+
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    void updateFilterCoefficients (float currentQ);
+    void updateFilterCoefficients (float baseFrequencyHz, float currentQ);
 
     juce::Random random;
 
@@ -54,7 +56,7 @@ private:
     std::atomic<float>* masterGainParam { nullptr };
 
     double currentSampleRate = 44100.0;
-    const float baseFreqC4 = 261.6256f;
+    float currentBaseFreq = 261.6256f;
     float cachedQ = 50.0f;
 
     juce::ADSR adsr;

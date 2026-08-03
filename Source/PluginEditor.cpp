@@ -1,23 +1,15 @@
-#include "PluginProcessor.h"
+﻿#include "PluginProcessor.h"
 #include "PluginEditor.h"
 
 OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), genericEditor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p), keyboardComponent (p.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard), genericEditor (p)
 {
     addAndMakeVisible (genericEditor);
 
-    triggerButton.setButtonText ("Play C4 Note (Hold)");
-    addAndMakeVisible (triggerButton);
+    addAndMakeVisible (keyboardComponent);
+    setWantsKeyboardFocus (true);
 
-    triggerButton.onStateChange = [this]()
-    {
-        if (triggerButton.isDown())
-            audioProcessor.triggerNoteOn();
-        else
-            audioProcessor.triggerNoteOff();
-    };
-
-    setSize (450, 650);
+    setSize (500, 700);
 }
 
 OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor() {}
@@ -31,7 +23,7 @@ void OvertoneAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
     
-    triggerButton.setBounds (bounds.removeFromTop (50).reduced (10, 5));
+    keyboardComponent.setBounds (bounds.removeFromTop (80).reduced (5));
     
     genericEditor.setBounds (bounds);
 }
