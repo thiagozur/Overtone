@@ -52,6 +52,7 @@ private:
     std::array<std::array<juce::dsp::IIR::Filter<float>, numHarmonics>, numChannels> allpassFilters;
 
     std::array<std::atomic<float>*, numHarmonics> harmonicGainParams { nullptr };
+    std::atomic<float>* driveParam { nullptr };
     std::atomic<float>* qParam { nullptr };
     std::atomic<float>* masterGainParam { nullptr };
 

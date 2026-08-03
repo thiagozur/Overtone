@@ -21,6 +21,7 @@ OvertoneAudioProcessor::OvertoneAudioProcessor()
     sustainParam = apvts.getRawParameterValue ("sustain");
     releaseParam = apvts.getRawParameterValue ("release");
     noiseSourceParam = apvts.getRawParameterValue ("noise_source");
+    driveParam = apvts.getRawParameterValue ("drive");
     
     for (int i = 0; i < numHarmonics; ++i)
     {
@@ -51,6 +52,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         "Noise Source",
         sourceChoices,
         0
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "drive", 1 },
+        "Drive",
+        juce::NormalisableRange<float>(1.0f, 10.0f, 0.1f, 0.5f),
+        1.5f
     ));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat>(
@@ -301,6 +309,8 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     int sourceChoice = static_cast<int>(noiseSourceParam->load());
     updateNoiseSourceSelection (sourceChoice);
 
+    float drive = driveParam->load();
+
     keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
     
     for (const auto metadata : midiMessages)
@@ -380,8 +390,14 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             harmonicSumR += (apR - notchR) * gain;
         }
 
-        leftChannel[sample] = harmonicSumL * globalGainCompensation * masterGainLinear * env;
-        rightChannel[sample] = harmonicSumR * globalGainCompensation * masterGainLinear * env;
+        float processedL = harmonicSumL * globalGainCompensation * env;
+        float processedR = harmonicSumR * globalGainCompensation * env;
+
+        processedL = std::tanh (processedL * drive);
+        processedR = std::tanh (processedR * drive);
+
+        leftChannel[sample] = processedL * masterGainLinear;
+        rightChannel[sample] = processedR * masterGainLinear;
     }
 }
 

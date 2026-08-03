@@ -22,6 +22,32 @@ public:
             sampleBuffer.setSize (static_cast<int>(reader->numChannels), samplesToRead);
             reader->read (&sampleBuffer, 0, samplesToRead, 0, true, true);
 
+            double sumOfSquares = 0.0;
+            int totalSamples = sampleBuffer.getNumSamples() * sampleBuffer.getNumChannels();
+
+            for (int ch = 0; ch < sampleBuffer.getNumChannels(); ++ch)
+            {
+                const float* channelData = sampleBuffer.getReadPointer (ch);
+                for (int s = 0; s < sampleBuffer.getNumSamples(); ++s)
+                {
+                    float sample = channelData[s];
+                    sumOfSquares += static_cast<double>(sample * sample);
+                }
+            }
+
+            float currentRMS = static_cast<float>(std::sqrt (sumOfSquares / totalSamples));
+
+            const float targetRMS = 0.15f; 
+
+            if (currentRMS > 0.0001f)
+            {
+                float normalizationMultiplier = targetRMS / currentRMS;
+
+                normalizationMultiplier = std::min (normalizationMultiplier, 8.0f);
+
+                sampleBuffer.applyGain (normalizationMultiplier);
+            }
+
             playhead = 0;
             isLoaded = true;
 
@@ -44,6 +70,32 @@ public:
             
             sampleBuffer.setSize (static_cast<int>(reader->numChannels), samplesToRead);
             reader->read (&sampleBuffer, 0, samplesToRead, 0, true, true);
+
+            double sumOfSquares = 0.0;
+            int totalSamples = sampleBuffer.getNumSamples() * sampleBuffer.getNumChannels();
+
+            for (int ch = 0; ch < sampleBuffer.getNumChannels(); ++ch)
+            {
+                const float* channelData = sampleBuffer.getReadPointer (ch);
+                for (int s = 0; s < sampleBuffer.getNumSamples(); ++s)
+                {
+                    float sample = channelData[s];
+                    sumOfSquares += static_cast<double>(sample * sample);
+                }
+            }
+
+            float currentRMS = static_cast<float>(std::sqrt (sumOfSquares / totalSamples));
+
+            const float targetRMS = 0.15f; 
+
+            if (currentRMS > 0.0001f)
+            {
+                float normalizationMultiplier = targetRMS / currentRMS;
+
+                normalizationMultiplier = std::min (normalizationMultiplier, 8.0f);
+
+                sampleBuffer.applyGain (normalizationMultiplier);
+            }
 
             playhead = 0;
             isLoaded = true;
