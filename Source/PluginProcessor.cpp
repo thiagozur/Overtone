@@ -22,6 +22,10 @@ OvertoneAudioProcessor::OvertoneAudioProcessor()
     releaseParam = apvts.getRawParameterValue ("release");
     noiseSourceParam = apvts.getRawParameterValue ("noise_source");
     driveParam = apvts.getRawParameterValue ("drive");
+    widthParam = apvts.getRawParameterValue ("stereo_width");
+    reverbSizeParam = apvts.getRawParameterValue ("reverb_size");
+    reverbMixParam = apvts.getRawParameterValue ("reverb_mix");
+    shimmerParam = apvts.getRawParameterValue ("shimmer_amount");
     
     for (int i = 0; i < numHarmonics; ++i)
     {
@@ -115,6 +119,34 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         "Release",
         juce::NormalisableRange<float>(0.001f, 5.0f, 0.001f, 0.3f),
         0.5f
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "stereo_width", 1 },
+        "Width",
+        juce::NormalisableRange<float>(0.0f, 0.03f, 0.0001f, 0.5f),
+        0.003f
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "reverb_size", 1 },
+        "Reverb Room Size",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "reverb_mix", 1 },
+        "Reverb Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.3f
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "shimmer_amount", 1 },
+        "Shimmer",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f
     ));
 
     return { params.begin(), params.end() };
@@ -216,7 +248,7 @@ void OvertoneAudioProcessor::changeProgramName (int /* index */, const juce::Str
 
 }
 
-void OvertoneAudioProcessor::updateFilterCoefficients (float baseFrequencyHz, float currentQ)
+void OvertoneAudioProcessor::updateFilterCoefficients (float baseFrequencyHz, float currentQ, float detuneAmount)
 {
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = currentSampleRate;
@@ -225,23 +257,30 @@ void OvertoneAudioProcessor::updateFilterCoefficients (float baseFrequencyHz, fl
 
     for (int i = 0; i < numHarmonics; ++i)
     {
-        float harmonicFreq = baseFrequencyHz * (i + 1);
+        float harmonicBase = baseFrequencyHz * (i + 1);
 
-        if (harmonicFreq < currentSampleRate * 0.49f)
+        float freqL = harmonicBase * (1.0f + detuneAmount * 0.5f);
+        float freqR = harmonicBase * (1.0f - detuneAmount * 0.5f);
+
+        if (freqL < currentSampleRate * 0.49f && freqR < currentSampleRate * 0.49f)
         {
-            auto apCoeffs = juce::dsp::IIR::Coefficients<float>::makeAllPass (currentSampleRate, harmonicFreq, currentQ);
-            auto notchCoeffs = juce::dsp::IIR::Coefficients<float>::makeNotch (currentSampleRate, harmonicFreq, currentQ);
+            auto apCoeffsL = juce::dsp::IIR::Coefficients<float>::makeAllPass (currentSampleRate, freqL, currentQ);
+            auto notchCoeffsL = juce::dsp::IIR::Coefficients<float>::makeNotch (currentSampleRate, freqL, currentQ);
 
-            for (int ch = 0; ch < numChannels; ++ch)
-            {
-                allpassFilters[ch][i].coefficients = apCoeffs;
-                bandpassFilters[ch][i].coefficients = notchCoeffs;
-            }
+            allpassFilters[0][i].coefficients = apCoeffsL;
+            bandpassFilters[0][i].coefficients = notchCoeffsL;
+
+            auto apCoeffsR = juce::dsp::IIR::Coefficients<float>::makeAllPass (currentSampleRate, freqR, currentQ);
+            auto notchCoeffsR = juce::dsp::IIR::Coefficients<float>::makeNotch (currentSampleRate, freqR, currentQ);
+
+            allpassFilters[1][i].coefficients = apCoeffsR;
+            bandpassFilters[1][i].coefficients = notchCoeffsR;
         }
     }
 
     currentBaseFreq = baseFrequencyHz;
     cachedQ = currentQ;
+    cachedWidth = detuneAmount;
 }
 
 void OvertoneAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -251,11 +290,21 @@ void OvertoneAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
-    spec.numChannels = 1;
+    spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());;
+
+    reverb.prepare (spec);
+
+    int shimmerBufferLength = static_cast<int>(sampleRate * 0.1);
+    shimmerFeedbackBuffer.setSize (2, shimmerBufferLength);
+    shimmerFeedbackBuffer.clear();
+    shimmerWritePos = 0;
 
     adsr.setSampleRate (sampleRate);
 
     float currentQ = qParam->load();
+
+    juce::dsp::ProcessSpec filterSpec = spec;
+    filterSpec.numChannels = 1;
 
     for (int i = 0; i < numHarmonics; ++i)
     {
@@ -270,11 +319,11 @@ void OvertoneAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
             {
                 allpassFilters[ch][i].coefficients = apCoeffs;
                 allpassFilters[ch][i].reset();
-                allpassFilters[ch][i].prepare (spec);
+                allpassFilters[ch][i].prepare (filterSpec);
 
                 bandpassFilters[ch][i].coefficients = notchCoeffs;
                 bandpassFilters[ch][i].reset();
-                bandpassFilters[ch][i].prepare (spec);
+                bandpassFilters[ch][i].prepare (filterSpec);
             }
         }
     }
@@ -311,6 +360,12 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
     float drive = driveParam->load();
 
+    float targetQ = qParam->load();
+    float targetWidth = widthParam->load();
+    float reverbSize = reverbSizeParam->load();
+    float reverbMix = reverbMixParam->load();
+    float shimmerAmount = shimmerParam->load();
+
     keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
     
     for (const auto metadata : midiMessages)
@@ -320,7 +375,7 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         {
             int noteNumber = msg.getNoteNumber();
             float frequencyHz = static_cast<float>(juce::MidiMessage::getMidiNoteInHertz (noteNumber));
-            updateFilterCoefficients (frequencyHz, qParam->load());
+            updateFilterCoefficients (frequencyHz, targetQ, targetWidth);
             adsr.noteOn();
         }
         else if (msg.isNoteOff())
@@ -333,9 +388,9 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    float targetQ = qParam->load();
-    if (std::abs (targetQ - cachedQ) > 0.01f)
-        updateFilterCoefficients (currentBaseFreq, targetQ);
+    if (std::abs (targetQ - cachedQ) > 0.01f || std::abs (targetWidth - cachedWidth) > 0.0001f)
+        updateFilterCoefficients (currentBaseFreq, targetQ, targetWidth);
+       
 
     adsrParams.attack = attackParam->load();
     adsrParams.decay = decayParam->load();
@@ -396,9 +451,71 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         processedL = std::tanh (processedL * drive);
         processedR = std::tanh (processedR * drive);
 
-        leftChannel[sample] = processedL * masterGainLinear;
-        rightChannel[sample] = processedR * masterGainLinear;
+        leftChannel[sample] = processedL;
+        rightChannel[sample] = processedR;
     }
+
+    float effectiveShimmer = shimmerAmount * reverbMix;
+
+    if (effectiveShimmer > 0.01f && shimmerFeedbackBuffer.getNumSamples() > 0)
+    {
+        int bufLen = shimmerFeedbackBuffer.getNumSamples();
+        float halfLen = static_cast<float>(bufLen) * 0.5f;
+
+        for (int s = 0; s < buffer.getNumSamples(); ++s)
+        {
+            shimmerFeedbackBuffer.setSample (0, shimmerWritePos, leftChannel[s]);
+            shimmerFeedbackBuffer.setSample (1, shimmerWritePos, rightChannel[s]);
+
+            float pos1 = std::fmod (shimmerPhase, halfLen);
+            float pos2 = std::fmod (shimmerPhase + (halfLen * 0.5f), halfLen);
+
+            int idx1A = static_cast<int>(pos1) % bufLen;
+            int idx1B = (idx1A + 1) % bufLen;
+            float frac1 = pos1 - std::floor(pos1);
+
+            int idx2A = static_cast<int>(pos2) % bufLen;
+            int idx2B = (idx2A + 1) % bufLen;
+            float frac2 = pos2 - std::floor(pos2);
+
+            float shimL1 = shimmerFeedbackBuffer.getSample (0, idx1A) * (1.0f - frac1) + shimmerFeedbackBuffer.getSample (0, idx1B) * frac1;
+            float shimR1 = shimmerFeedbackBuffer.getSample (1, idx1A) * (1.0f - frac1) + shimmerFeedbackBuffer.getSample (1, idx1B) * frac1;
+
+            float shimL2 = shimmerFeedbackBuffer.getSample (0, idx2A) * (1.0f - frac2) + shimmerFeedbackBuffer.getSample (0, idx2B) * frac2;
+            float shimR2 = shimmerFeedbackBuffer.getSample (1, idx2A) * (1.0f - frac2) + shimmerFeedbackBuffer.getSample (1, idx2B) * frac2;
+
+            float w1 = 1.0f - std::abs ((pos1 / (halfLen * 0.5f)) - 1.0f);
+            float w2 = 1.0f - std::abs ((pos2 / (halfLen * 0.5f)) - 1.0f);
+
+            float outputShimmerL = (shimL1 * w1 + shimL2 * w2) * effectiveShimmer * 0.35f;
+            float outputShimmerR = (shimR1 * w1 + shimR2 * w2) * effectiveShimmer * 0.35f;
+
+            leftChannel[s]  += outputShimmerL;
+            rightChannel[s] += outputShimmerR;
+
+            shimmerWritePos = (shimmerWritePos + 1) % bufLen;
+            shimmerPhase += 2.0f;
+            if (shimmerPhase >= static_cast<float>(bufLen))
+                shimmerPhase -= static_cast<float>(bufLen);
+        }
+    }
+
+    if (reverbMix > 0.01f)
+    {
+        reverbParams.roomSize = reverbSize;
+        reverbParams.damping = 0.3f;
+        reverbParams.wetLevel = reverbMix;
+        reverbParams.dryLevel = 1.0f - (reverbMix * 0.5f);
+        reverbParams.width = 1.0f;
+        reverbParams.freezeMode = 0.0f;
+        reverb.setParameters (reverbParams);
+
+        juce::dsp::AudioBlock<float> block (buffer);
+        juce::dsp::ProcessContextReplacing<float> context (block);
+        reverb.process (context);
+    }
+
+    buffer.applyGain (masterGainLinear);
 }
 
 bool OvertoneAudioProcessor::hasEditor() const

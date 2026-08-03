@@ -41,7 +41,7 @@ public:
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    void updateFilterCoefficients (float baseFrequencyHz, float currentQ);
+    void updateFilterCoefficients (float baseFrequencyHz, float currentQ, float detuneAmount);
 
     juce::Random random;
 
@@ -53,12 +53,14 @@ private:
 
     std::array<std::atomic<float>*, numHarmonics> harmonicGainParams { nullptr };
     std::atomic<float>* driveParam { nullptr };
+    std::atomic<float>* widthParam { nullptr };
     std::atomic<float>* qParam { nullptr };
     std::atomic<float>* masterGainParam { nullptr };
 
     double currentSampleRate = 44100.0;
     float currentBaseFreq = 261.6256f;
     float cachedQ = 50.0f;
+    float cachedWidth = 0.003f;
 
     juce::ADSR adsr;
     juce::ADSR::Parameters adsrParams;
@@ -74,6 +76,17 @@ private:
     int currentSourceChoice = -1;
 
     std::atomic<float>* noiseSourceParam { nullptr };
+
+    juce::dsp::Reverb reverb;
+    juce::dsp::Reverb::Parameters reverbParams;
+
+    juce::AudioBuffer<float> shimmerFeedbackBuffer;
+    int shimmerWritePos = 0;
+    float shimmerPhase = 0.0f;
+
+    std::atomic<float>* reverbMixParam { nullptr };
+    std::atomic<float>* reverbSizeParam { nullptr };
+    std::atomic<float>* shimmerParam { nullptr };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OvertoneAudioProcessor)
 };
