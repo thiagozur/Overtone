@@ -1,7 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-FrequenzAudioProcessorEditor::FrequenzAudioProcessorEditor (FrequenzAudioProcessor& p)
+OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), genericEditor (p)
 {
     addAndMakeVisible (genericEditor);
@@ -20,14 +20,14 @@ FrequenzAudioProcessorEditor::FrequenzAudioProcessorEditor (FrequenzAudioProcess
     setSize (450, 650);
 }
 
-FrequenzAudioProcessorEditor::~FrequenzAudioProcessorEditor() {}
+OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor() {}
 
-void FrequenzAudioProcessorEditor::paint (juce::Graphics& g)
+void OvertoneAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 }
 
-void FrequenzAudioProcessorEditor::resized()
+void OvertoneAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
     

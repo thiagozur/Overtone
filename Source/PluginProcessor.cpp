@@ -1,7 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-FrequenzAudioProcessor::FrequenzAudioProcessor()
+OvertoneAudioProcessor::OvertoneAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -28,12 +28,12 @@ FrequenzAudioProcessor::FrequenzAudioProcessor()
     }
 }
 
-FrequenzAudioProcessor::~FrequenzAudioProcessor()
+OvertoneAudioProcessor::~OvertoneAudioProcessor()
 {
 
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout FrequenzAudioProcessor::createParameterLayout()
+juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
@@ -96,12 +96,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout FrequenzAudioProcessor::crea
     return { params.begin(), params.end() };
 }
 
-const juce::String FrequenzAudioProcessor::getName() const
+const juce::String OvertoneAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool FrequenzAudioProcessor::acceptsMidi() const
+bool OvertoneAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -110,7 +110,7 @@ bool FrequenzAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool FrequenzAudioProcessor::producesMidi() const
+bool OvertoneAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -119,7 +119,7 @@ bool FrequenzAudioProcessor::producesMidi() const
    #endif
 }
 
-bool FrequenzAudioProcessor::isMidiEffect() const
+bool OvertoneAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -128,47 +128,47 @@ bool FrequenzAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double FrequenzAudioProcessor::getTailLengthSeconds() const
+double OvertoneAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int FrequenzAudioProcessor::getNumPrograms()
+int OvertoneAudioProcessor::getNumPrograms()
 {
     return 1;
 }
 
-int FrequenzAudioProcessor::getCurrentProgram()
+int OvertoneAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void FrequenzAudioProcessor::setCurrentProgram (int index)
+void OvertoneAudioProcessor::setCurrentProgram (int index)
 {
 
 }
 
-const juce::String FrequenzAudioProcessor::getProgramName (int index)
+const juce::String OvertoneAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void FrequenzAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void OvertoneAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
 
 }
 
-void FrequenzAudioProcessor::triggerNoteOn()
+void OvertoneAudioProcessor::triggerNoteOn()
 {
     adsr.noteOn();
 }
 
-void FrequenzAudioProcessor::triggerNoteOff()
+void OvertoneAudioProcessor::triggerNoteOff()
 {
     adsr.noteOff();
 }
 
-void FrequenzAudioProcessor::updateFilterCoefficients (float currentQ)
+void OvertoneAudioProcessor::updateFilterCoefficients (float currentQ)
 {
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = currentSampleRate;
@@ -195,7 +195,7 @@ void FrequenzAudioProcessor::updateFilterCoefficients (float currentQ)
     cachedQ = currentQ;
 }
 
-void FrequenzAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void OvertoneAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
 
@@ -233,13 +233,13 @@ void FrequenzAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     cachedQ = currentQ;
 }
 
-void FrequenzAudioProcessor::releaseResources()
+void OvertoneAudioProcessor::releaseResources()
 {
 
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool FrequenzAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool OvertoneAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -253,7 +253,7 @@ bool FrequenzAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts)
 }
 #endif
 
-void FrequenzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
 
@@ -324,24 +324,24 @@ void FrequenzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     }
 }
 
-bool FrequenzAudioProcessor::hasEditor() const
+bool OvertoneAudioProcessor::hasEditor() const
 {
     return true;
 }
 
-juce::AudioProcessorEditor* FrequenzAudioProcessor::createEditor()
+juce::AudioProcessorEditor* OvertoneAudioProcessor::createEditor()
 {
-    return new FrequenzAudioProcessorEditor (*this);
+    return new OvertoneAudioProcessorEditor (*this);
 }
 
-void FrequenzAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void OvertoneAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary (*xml, destData);
 }
 
-void FrequenzAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void OvertoneAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     if (xmlState.get() != nullptr)
@@ -351,5 +351,5 @@ void FrequenzAudioProcessor::setStateInformation (const void* data, int sizeInBy
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new FrequenzAudioProcessor();
+    return new OvertoneAudioProcessor();
 }

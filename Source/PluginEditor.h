@@ -3,20 +3,20 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-class FrequenzAudioProcessorEditor  : public juce::AudioProcessorEditor
+class OvertoneAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
-    FrequenzAudioProcessorEditor (FrequenzAudioProcessor&);
-    ~FrequenzAudioProcessorEditor() override;
+    OvertoneAudioProcessorEditor (OvertoneAudioProcessor&);
+    ~OvertoneAudioProcessorEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    FrequenzAudioProcessor& audioProcessor;
+    OvertoneAudioProcessor& audioProcessor;
 
     juce::TextButton triggerButton { "Play C4 Note" };
     juce::GenericAudioProcessorEditor genericEditor;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FrequenzAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OvertoneAudioProcessorEditor)
 };

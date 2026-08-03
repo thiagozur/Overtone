@@ -2,11 +2,11 @@
 
 #include <JuceHeader.h>
 
-class FrequenzAudioProcessor  : public juce::AudioProcessor
+class OvertoneAudioProcessor  : public juce::AudioProcessor
 {
 public:
-    FrequenzAudioProcessor();
-    ~FrequenzAudioProcessor() override;
+    OvertoneAudioProcessor();
+    ~OvertoneAudioProcessor() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -65,5 +65,5 @@ private:
     std::atomic<float>* sustainParam { nullptr };
     std::atomic<float>* releaseParam { nullptr };
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FrequenzAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OvertoneAudioProcessor)
 };
