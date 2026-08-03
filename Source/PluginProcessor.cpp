@@ -16,6 +16,10 @@ FrequenzAudioProcessor::FrequenzAudioProcessor()
 {
     masterGainParam = apvts.getRawParameterValue ("master_gain");
     qParam = apvts.getRawParameterValue ("resonance_q");
+    attackParam = apvts.getRawParameterValue ("attack");
+    decayParam = apvts.getRawParameterValue ("decay");
+    sustainParam = apvts.getRawParameterValue ("sustain");
+    releaseParam = apvts.getRawParameterValue ("release");
     
     for (int i = 0; i < numHarmonics; ++i)
     {
@@ -60,6 +64,34 @@ juce::AudioProcessorValueTreeState::ParameterLayout FrequenzAudioProcessor::crea
             1.0f
         ));
     }
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "attack", 1 },
+        "Attack",
+        juce::NormalisableRange<float>(0.001f, 5.0f, 0.001f, 0.3f),
+        0.1f
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "decay", 1 },
+        "Decay",
+        juce::NormalisableRange<float>(0.001f, 5.0f, 0.001f, 0.3f),
+        0.3f
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "sustain", 1 },
+        "Sustain",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.8f
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "release", 1 },
+        "Release",
+        juce::NormalisableRange<float>(0.001f, 5.0f, 0.001f, 0.3f),
+        0.5f
+    ));
 
     return { params.begin(), params.end() };
 }
@@ -126,6 +158,16 @@ void FrequenzAudioProcessor::changeProgramName (int index, const juce::String& n
 
 }
 
+void FrequenzAudioProcessor::triggerNoteOn()
+{
+    adsr.noteOn();
+}
+
+void FrequenzAudioProcessor::triggerNoteOff()
+{
+    adsr.noteOff();
+}
+
 void FrequenzAudioProcessor::updateFilterCoefficients (float currentQ)
 {
     juce::dsp::ProcessSpec spec;
@@ -161,6 +203,8 @@ void FrequenzAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     spec.numChannels = 1;
+
+    adsr.setSampleRate (sampleRate);
 
     float currentQ = qParam->load();
 
@@ -211,8 +255,16 @@ bool FrequenzAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts)
 
 void FrequenzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused (midiMessages);
     juce::ScopedNoDenormals noDenormals;
+
+    for (const auto metadata : midiMessages)
+    {
+        auto msg = metadata.getMessage();
+        if (msg.isNoteOn())
+            adsr.noteOn();
+        else if (msg.isNoteOff())
+            adsr.noteOff();
+    }
 
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -223,6 +275,12 @@ void FrequenzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     float targetQ = qParam->load();
     if (std::abs (targetQ - cachedQ) > 0.01f)
         updateFilterCoefficients (targetQ);
+
+    adsrParams.attack = attackParam->load();
+    adsrParams.decay = decayParam->load();
+    adsrParams.sustain = sustainParam->load();
+    adsrParams.release = releaseParam->load();
+    adsr.setParameters (adsrParams);
     
     float rawMasterDb = masterGainParam->load();
     float masterGainLinear = juce::Decibels::decibelsToGain (rawMasterDb);
@@ -238,6 +296,8 @@ void FrequenzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
+        float env = adsr.getNextSample();
+
         float noiseL = random.nextFloat() * 2.0f - 1.0f;
         float noiseR = random.nextFloat() * 2.0f - 1.0f;
 
@@ -259,8 +319,8 @@ void FrequenzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             harmonicSumR += (apR - notchR) * gain;
         }
 
-        leftChannel[sample] = harmonicSumL * globalGainCompensation * masterGainLinear;
-        rightChannel[sample] = harmonicSumR * globalGainCompensation * masterGainLinear;
+        leftChannel[sample] = harmonicSumL * globalGainCompensation * masterGainLinear * env;
+        rightChannel[sample] = harmonicSumR * globalGainCompensation * masterGainLinear * env;
     }
 }
 
@@ -271,7 +331,7 @@ bool FrequenzAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* FrequenzAudioProcessor::createEditor()
 {
-    return new juce::GenericAudioProcessorEditor (*this);
+    return new FrequenzAudioProcessorEditor (*this);
 }
 
 void FrequenzAudioProcessor::getStateInformation (juce::MemoryBlock& destData)

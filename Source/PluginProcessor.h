@@ -32,6 +32,9 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    void triggerNoteOn();
+    void triggerNoteOff();
+
     juce::AudioProcessorValueTreeState apvts;
 
 private:
@@ -53,6 +56,14 @@ private:
     double currentSampleRate = 44100.0;
     const float baseFreqC4 = 261.6256f;
     float cachedQ = 50.0f;
+
+    juce::ADSR adsr;
+    juce::ADSR::Parameters adsrParams;
+
+    std::atomic<float>* attackParam { nullptr };
+    std::atomic<float>* decayParam { nullptr };
+    std::atomic<float>* sustainParam { nullptr };
+    std::atomic<float>* releaseParam { nullptr };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FrequenzAudioProcessor)
 };
