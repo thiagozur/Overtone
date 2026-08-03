@@ -38,8 +38,7 @@ private:
     static constexpr int numHarmonics = 8;
     static constexpr int numChannels = 2;
 
-    std::array<std::array<juce::dsp::IIR::Filter<float>, numHarmonics>, numChannels> harmonicFilters;
-
+    std::array<std::array<juce::dsp::IIR::Filter<float>, numHarmonics>, numChannels> bandpassFilters;
     std::array<std::array<juce::dsp::IIR::Filter<float>, numHarmonics>, numChannels> allpassFilters;
 
     double currentSampleRate = 44100.0;

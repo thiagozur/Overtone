@@ -92,7 +92,7 @@ void FrequenzAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     spec.numChannels = 1;
 
-    const float Q = 80.0f;
+    const float Q = 90.0f; 
 
     for (int i = 0; i < numHarmonics; ++i)
     {
@@ -100,13 +100,18 @@ void FrequenzAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
 
         if (harmonicFreq < sampleRate * 0.49f)
         {
-            auto coefficients = juce::dsp::IIR::Coefficients<float>::makeBandPass(sampleRate, harmonicFreq, Q);
+            auto apCoeffs = juce::dsp::IIR::Coefficients<float>::makeAllPass (sampleRate, harmonicFreq, Q);
+            auto notchCoeffs = juce::dsp::IIR::Coefficients<float>::makeNotch (sampleRate, harmonicFreq, Q);
 
             for (int ch = 0; ch < numChannels; ++ch)
             {
-                harmonicFilters[ch][i].coefficients = coefficients;
-                harmonicFilters[ch][i].reset();
-                harmonicFilters[ch][i].prepare(spec);
+                allpassFilters[ch][i].coefficients = apCoeffs;
+                allpassFilters[ch][i].reset();
+                allpassFilters[ch][i].prepare (spec);
+
+                bandpassFilters[ch][i].coefficients = notchCoeffs;
+                bandpassFilters[ch][i].reset();
+                bandpassFilters[ch][i].prepare (spec);
             }
         }
     }
@@ -137,16 +142,16 @@ void FrequenzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     juce::ignoreUnused (midiMessages);
     juce::ScopedNoDenormals noDenormals;
 
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    auto* leftChannel  = buffer.getWritePointer(0);
-    auto* rightChannel = buffer.getWritePointer(1);
+    auto* leftChannel = buffer.getWritePointer (0);
+    auto* rightChannel = buffer.getWritePointer (1);
 
-    const float gainAdjustment = 0.5f; 
+    const float gainAdjustment = 4.0f; 
 
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
@@ -158,11 +163,16 @@ void FrequenzAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
         for (int h = 0; h < numHarmonics; ++h)
         {
-            harmonicSumL += harmonicFilters[0][h].processSample(noiseL);
-            harmonicSumR += harmonicFilters[1][h].processSample(noiseR);
+            float apL = allpassFilters[0][h].processSample (noiseL);
+            float notchL = bandpassFilters[0][h].processSample (noiseL);
+            harmonicSumL += (apL - notchL);
+
+            float apR = allpassFilters[1][h].processSample (noiseR);
+            float notchR = bandpassFilters[1][h].processSample (noiseR);
+            harmonicSumR += (apR - notchR);
         }
 
-        leftChannel[sample]  = harmonicSumL * gainAdjustment;
+        leftChannel[sample] = harmonicSumL * gainAdjustment;
         rightChannel[sample] = harmonicSumR * gainAdjustment;
     }
 }
