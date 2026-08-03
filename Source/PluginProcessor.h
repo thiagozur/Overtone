@@ -32,7 +32,12 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    juce::AudioProcessorValueTreeState apvts;
+
 private:
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    void updateFilterCoefficients (float currentQ);
+
     juce::Random random;
 
     static constexpr int numHarmonics = 8;
@@ -41,8 +46,13 @@ private:
     std::array<std::array<juce::dsp::IIR::Filter<float>, numHarmonics>, numChannels> bandpassFilters;
     std::array<std::array<juce::dsp::IIR::Filter<float>, numHarmonics>, numChannels> allpassFilters;
 
+    std::array<std::atomic<float>*, numHarmonics> harmonicGainParams { nullptr };
+    std::atomic<float>* qParam { nullptr };
+    std::atomic<float>* masterGainParam { nullptr };
+
     double currentSampleRate = 44100.0;
-    const float baseFreqC4 = 261.6256f; 
+    const float baseFreqC4 = 261.6256f;
+    float cachedQ = 50.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FrequenzAudioProcessor)
 };
