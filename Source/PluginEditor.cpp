@@ -2,57 +2,45 @@
 #include "PluginEditor.h"
 
 OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), keyboardComponent (p.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard), genericEditor (p)
+    : AudioProcessorEditor (&p),
+      audioProcessor (p),
+      orbitNodes (audioProcessor.getAPVTS()),
+      envelopeGraph (audioProcessor.getAPVTS()),
+      noisePanel (audioProcessor.getAPVTS()),
+      keyboardComponent (audioProcessor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard)
 {
+    addAndMakeVisible (orbitNodes);
+    addAndMakeVisible (envelopeGraph);
+    addAndMakeVisible (noisePanel);
+
     addAndMakeVisible (keyboardComponent);
-    addAndMakeVisible (loadFileButton);
-    addAndMakeVisible (genericEditor);
+    keyboardComponent.setKeyWidth (22.0f);
 
-    loadFileButton.onClick = [this]()
-    {
-        fileChooser = std::make_unique<juce::FileChooser>(
-            "Selecione un archivo de ruido",
-            juce::File::getSpecialLocation(juce::File::userHomeDirectory),
-            "*.wav;*.mp3;*.aiff;*.flac"
-        );
-
-        auto folderChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
-
-        fileChooser->launchAsync(folderChooserFlags, [this](const juce::FileChooser& chooser)
-        {
-            auto file = chooser.getResult();
-            if (file.existsAsFile())
-            {
-                if (audioProcessor.loadCustomNoiseFile(file))
-                {
-                    if (auto* choiceParam = dynamic_cast<juce::AudioParameterChoice*>(audioProcessor.apvts.getParameter("noise_source")))
-                        *choiceParam = 5;
-
-                    loadFileButton.setButtonText("Cargado: " + file.getFileName() + "(¿Cambiar?)");
-                }
-            }
-        });
-    };
-
-    setWantsKeyboardFocus (true);
-
-    setSize (500, 750);
+    setSize (850, 580);
 }
 
 OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor() {}
 
 void OvertoneAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll (juce::Colour::fromRGB (18, 20, 24));
 }
 
 void OvertoneAudioProcessorEditor::resized()
 {
-    auto bounds = getLocalBounds();
-    
-    keyboardComponent.setBounds (bounds.removeFromTop (80).reduced (5));
+    auto bounds = getLocalBounds().reduced (10);
 
-    loadFileButton.setBounds (bounds.removeFromTop (40).reduced (10, 5));
+    keyboardComponent.setBounds (bounds.removeFromBottom (70));
     
-    genericEditor.setBounds (bounds);
+    bounds.removeFromBottom (10);
+
+    orbitNodes.setBounds (bounds.removeFromLeft (420));
+
+    bounds.removeFromLeft (10);
+
+    envelopeGraph.setBounds (bounds.removeFromTop (210));
+
+    bounds.removeFromTop (10);
+
+    noisePanel.setBounds (bounds);
 }

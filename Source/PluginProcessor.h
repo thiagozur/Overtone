@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Tools/SampleLoopPlayer.h"
+#include "Tools/PresetManager.h"
 
 struct FilterVoice
 {
@@ -126,11 +127,14 @@ public:
     bool loadCustomNoiseFile (const juce::File& file);
 
     juce::AudioProcessorValueTreeState apvts;
+    PresetManager& getPresetManager() { return presetManager; }
+    juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
 
-    juce::MidiKeyboardState keyboardState;
+    juce::MidiKeyboardState& getKeyboardState() { return keyboardState; }
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    PresetManager presetManager { apvts };
 
     juce::Random random;
 
@@ -177,6 +181,8 @@ private:
     std::atomic<float>* reverbMixParam { nullptr };
     std::atomic<float>* reverbSizeParam { nullptr };
     std::atomic<float>* shimmerParam { nullptr };
+
+    juce::MidiKeyboardState keyboardState;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OvertoneAudioProcessor)
 };

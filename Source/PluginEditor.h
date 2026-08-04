@@ -2,6 +2,9 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "Components/OrbitNodes.h"
+#include "Components/EnvelopeGraph.h"
+#include "Components/NoiseSource.h"
 
 class OvertoneAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
@@ -15,11 +18,11 @@ public:
 private:
     OvertoneAudioProcessor& audioProcessor;
 
-    juce::TextButton loadFileButton { "Cargar archivo de ruido" };
-    std::unique_ptr<juce::FileChooser> fileChooser;
+    OrbitNodes orbitNodes;
+    EnvelopeGraph envelopeGraph;
+    NoiseSource noisePanel;
 
     juce::MidiKeyboardComponent keyboardComponent;
-    juce::GenericAudioProcessorEditor genericEditor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OvertoneAudioProcessorEditor)
 };

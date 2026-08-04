@@ -39,6 +39,14 @@ target_sources(Overtone PRIVATE
     Source/PluginEditor.h
     Source/PluginEditor.cpp
     Source/Tools/SampleLoopPlayer.h
+    Source/Tools/PresetManager.h
+    Source/Tools/PresetManager.cpp
+    Source/Components/OrbitNodes.h
+    Source/Components/OrbitNodes.cpp
+    Source/Components/EnvelopeGraph.h
+    Source/Components/EnvelopeGraph.cpp
+    Source/Components/NoiseSource.h
+    Source/Components/NoiseSource.cpp
 )
 
 juce_add_binary_data(FactoryAudioData
