@@ -5,8 +5,11 @@ Rack::Rack (juce::AudioProcessorValueTreeState& apvtsToUse) : apvts (apvtsToUse)
     setupRotarySlider (driveSlider, driveLabel, "Drive");
     driveAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "drive", driveSlider);
 
-    setupRotarySlider (widthSlider, widthLabel, "Filter Spread");
+    setupRotarySlider (widthSlider, widthLabel, "Detune Spread");
     widthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "stereo_width", widthSlider);
+
+    setupRotarySlider (chorusSlider, chorusLabel, "Chorus");
+    chorusAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "chorus_amount", chorusSlider);
 
     setupRotarySlider (reverbMixSlider, reverbMixLabel, "Mix");
     reverbMixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "reverb_mix", reverbMixSlider);
@@ -71,7 +74,7 @@ void Rack::paint (juce::Graphics& g)
     bounds.removeFromTop (gap);
 
     auto widthArea = bounds.removeFromTop (moduleHeight);
-    drawRackModule (g, widthArea, "02. Stereo");
+    drawRackModule (g, widthArea, "02. Modulation");
 
     bounds.removeFromTop (gap);
 
@@ -89,23 +92,25 @@ void Rack::resized()
     int knobHeight = 80;
     int labelHeight = 16;
     int contentYOffset = 38;
+    int startX = bounds.getX() + 40;
+    int spacing = 110;
 
     auto driveArea = bounds.removeFromTop (moduleHeight);
-    int startX = driveArea.getX() + 40;
     driveLabel.setBounds (startX, driveArea.getY() + contentYOffset, knobWidth, labelHeight);
     driveSlider.setBounds (startX, driveArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
 
     bounds.removeFromTop (gap);
 
-    auto widthArea = bounds.removeFromTop (moduleHeight);
-    widthLabel.setBounds (startX, widthArea.getY() + contentYOffset, knobWidth, labelHeight);
-    widthSlider.setBounds (startX, widthArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
+    auto modArea = bounds.removeFromTop (moduleHeight);
+    widthLabel.setBounds (startX, modArea.getY() + contentYOffset, knobWidth, labelHeight);
+    widthSlider.setBounds (startX, modArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
+
+    chorusLabel.setBounds (startX + spacing, modArea.getY() + contentYOffset, knobWidth, labelHeight);
+    chorusSlider.setBounds (startX + spacing, modArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
 
     bounds.removeFromTop (gap);
 
     auto reverbArea = bounds;
-    int spacing = 110;
-
     reverbMixLabel.setBounds (startX, reverbArea.getY() + contentYOffset, knobWidth, labelHeight);
     reverbMixSlider.setBounds (startX, reverbArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
 

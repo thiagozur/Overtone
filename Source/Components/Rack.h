@@ -22,6 +22,10 @@ private:
     juce::Label widthLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> widthAttach;
 
+    juce::Slider chorusSlider;
+    juce::Label chorusLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> chorusAttach;
+
     juce::Slider reverbMixSlider;
     juce::Label reverbMixLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> reverbMixAttach;

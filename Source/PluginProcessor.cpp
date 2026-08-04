@@ -34,6 +34,7 @@ OvertoneAudioProcessor::OvertoneAudioProcessor()
     reverbSizeParam = apvts.getRawParameterValue ("reverb_size");
     reverbMixParam = apvts.getRawParameterValue ("reverb_mix");
     shimmerParam = apvts.getRawParameterValue ("shimmer_amount");
+    chorusAmountParam = apvts.getRawParameterValue ("chorus_amount");
     
     for (int i = 0; i < numHarmonics; ++i)
     {
@@ -59,6 +60,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         "Vinilo",
         "Ruido Importado"
     };
+
     params.push_back (std::make_unique<juce::AudioParameterChoice>(
         juce::ParameterID { "noise_source", 1 },
         "Noise Source",
@@ -153,6 +155,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
     params.push_back (std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID { "shimmer_amount", 1 },
         "Shimmer",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "chorus_amount", 1 },
+        "Chorus",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
         0.0f
     ));
@@ -317,6 +326,14 @@ void OvertoneAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     shimmerWritePos = 0;
     shimmerPhase = 0.0f;
 
+    chorus.prepare (spec);
+
+    chorus.setRate (0.3f);
+    chorus.setDepth (0.35f);
+    chorus.setCentreDelay (7.5f);
+    chorus.setFeedback (0.15f);
+    chorus.setMix (0.0f);
+
     juce::dsp::ProcessSpec singleChanSpec;
     singleChanSpec.sampleRate = sampleRate;
     singleChanSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
@@ -386,6 +403,7 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     float reverbSize = reverbSizeParam->load();
     float reverbMix = reverbMixParam->load();
     float shimmerAmount = shimmerParam->load();
+    float chorusAmount = chorusAmountParam->load();
 
     keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
     
@@ -482,6 +500,15 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             leftChannel[sample] += harmonicSumL * globalGainCompensation * env * 0.3f;
             rightChannel[sample] += harmonicSumR * globalGainCompensation * env * 0.3f;
         }
+    }
+
+    if (chorusAmount > 0.001f)
+    {
+        chorus.setMix (chorusAmount);
+
+        juce::dsp::AudioBlock<float> block (buffer);
+        juce::dsp::ProcessContextReplacing<float> context (block);
+        chorus.process (context);
     }
 
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)

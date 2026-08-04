@@ -182,6 +182,10 @@ private:
     std::atomic<float>* reverbSizeParam { nullptr };
     std::atomic<float>* shimmerParam { nullptr };
 
+    juce::dsp::Chorus<float> chorus;
+
+    std::atomic<float>* chorusAmountParam { nullptr };
+
     juce::MidiKeyboardState keyboardState;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OvertoneAudioProcessor)
