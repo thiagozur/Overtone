@@ -4,11 +4,20 @@
 OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcessor& p)
     : AudioProcessorEditor (&p),
       audioProcessor (p),
+      headerBar (audioProcessor.getAPVTS(), audioProcessor.getPresetManager()),
       orbitNodes (audioProcessor.getAPVTS()),
       envelopeGraph (audioProcessor.getAPVTS()),
       noisePanel (audioProcessor.getAPVTS()),
+      rack (audioProcessor.getAPVTS()), 
       keyboardComponent (audioProcessor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard)
 {
+    addAndMakeVisible (headerBar);
+
+    headerBar.onPageSwitched = [this] (int pageIndex)
+    {
+        updatePageVisibility (pageIndex);
+    };
+
     addAndMakeVisible (orbitNodes);
     addAndMakeVisible (envelopeGraph);
     addAndMakeVisible (noisePanel);
@@ -16,7 +25,9 @@ OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcess
     addAndMakeVisible (keyboardComponent);
     keyboardComponent.setKeyWidth (22.0f);
 
-    setSize (850, 580);
+    addAndMakeVisible (rack);
+
+    setSize (850, 620);
 }
 
 OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor() {}
@@ -28,19 +39,38 @@ void OvertoneAudioProcessorEditor::paint (juce::Graphics& g)
 
 void OvertoneAudioProcessorEditor::resized()
 {
-    auto bounds = getLocalBounds().reduced (10);
+    auto bounds = getLocalBounds();
+
+    headerBar.setBounds (bounds.removeFromTop (42));
+
+    bounds.reduce (10, 10);
 
     keyboardComponent.setBounds (bounds.removeFromBottom (70));
-    
     bounds.removeFromBottom (10);
 
-    orbitNodes.setBounds (bounds.removeFromLeft (420));
+    if (headerBar.getCurrentPageIndex() == 0)
+    {
+        orbitNodes.setBounds (bounds.removeFromLeft (420));
+        bounds.removeFromLeft (10);
 
-    bounds.removeFromLeft (10);
+        envelopeGraph.setBounds (bounds.removeFromTop (210));
+        bounds.removeFromTop (10);
 
-    envelopeGraph.setBounds (bounds.removeFromTop (210));
+        noisePanel.setBounds (bounds);
+    }
+    else if (headerBar.getCurrentPageIndex() == 1)
+        rack.setBounds (bounds);
+}
 
-    bounds.removeFromTop (10);
+void OvertoneAudioProcessorEditor::updatePageVisibility (int pageIndex)
+{
+    bool isSynthPage = (pageIndex == 0);
+    bool isFxPage = (pageIndex == 1);
 
-    noisePanel.setBounds (bounds);
+    orbitNodes.setVisible (isSynthPage);
+    envelopeGraph.setVisible (isSynthPage);
+    noisePanel.setVisible (isSynthPage);
+    rack.setVisible (isFxPage);
+    
+    resized();
 }

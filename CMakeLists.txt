@@ -47,6 +47,10 @@ target_sources(Overtone PRIVATE
     Source/Components/EnvelopeGraph.cpp
     Source/Components/NoiseSource.h
     Source/Components/NoiseSource.cpp
+    Source/Components/HeaderBar.h
+    Source/Components/HeaderBar.cpp
+    Source/Components/Rack.h
+    Source/Components/Rack.cpp
 )
 
 juce_add_binary_data(FactoryAudioData

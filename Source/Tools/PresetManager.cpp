@@ -17,24 +17,38 @@ juce::File PresetManager::getUserPresetDirectory() const
 
 void PresetManager::loadFactoryPresets()
 {
+    auto setParamValue = [] (juce::ValueTree& tree, const juce::String& paramID, float value)
+    {
+        auto child = tree.getChildWithProperty ("id", paramID);
+        if (child.isValid())
+            child.setProperty ("value", value, nullptr);
+        else
+        {
+            juce::ValueTree paramNode ("PARAM");
+            paramNode.setProperty ("id", paramID, nullptr);
+            paramNode.setProperty ("value", value, nullptr);
+            tree.addChild (paramNode, -1, nullptr);
+        }
+    };
+
     Preset initPreset;
     initPreset.name = "Default";
-    initPreset.state = apvts.copyState();
+    initPreset.state = apvts.copyState().createCopy();
     initPreset.isFactory = true;
     presets.push_back (initPreset);
 
     Preset forestPad;
-    forestPad.name = "Forest Resonances";
+    forestPad.name = "Forest Pad";
     forestPad.isFactory = true;
 
-    juce::ValueTree vt = apvts.copyState();
-    vt.setProperty ("noise_source", 0, nullptr);
-    vt.setProperty ("noise_source", 0, nullptr);
-    vt.setProperty ("resonance_q", 80.0f, nullptr);
-    vt.setProperty ("reverb_mix", 0.5f, nullptr);
-    vt.setProperty ("shimmer_amount", 0.4f, nullptr);
-    forestPad.state = vt;
+    juce::ValueTree vt = apvts.copyState().createCopy();
 
+    setParamValue (vt, "noise_source", 0.0f);
+    setParamValue (vt, "resonance_q", 100.0f);
+    setParamValue (vt, "reverb_mix", 0.5f);
+    setParamValue (vt, "shimmer_amount", 0.4f);
+
+    forestPad.state = vt;
     presets.push_back (forestPad);
 }
 
@@ -66,7 +80,9 @@ void PresetManager::loadPreset (int index)
     if (index >= 0 && index < static_cast<int>(presets.size()))
     {
         currentPresetIndex = index;
-        apvts.replaceState (presets[index].state);
+        apvts.replaceState (presets[index].state.createCopy());
+
+        apvts.state.setProperty ("currentPresetIndex", currentPresetIndex, nullptr);
     }
 }
 
@@ -116,4 +132,12 @@ void PresetManager::deleteUserPreset (const juce::String& presetName)
             break;
         }
     }
+}
+
+void PresetManager::restoreCurrentPresetIndexFromState()
+{
+    if (apvts.state.hasProperty ("currentPresetIndex"))
+        currentPresetIndex = apvts.state.getProperty ("currentPresetIndex");
+    else
+        currentPresetIndex = 0;
 }

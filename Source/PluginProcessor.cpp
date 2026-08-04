@@ -133,7 +133,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         juce::ParameterID { "stereo_width", 1 },
         "Width",
         juce::NormalisableRange<float>(0.0f, 0.03f, 0.0001f, 0.5f),
-        0.003f
+        0.0f
     ));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat>(

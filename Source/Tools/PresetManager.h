@@ -19,6 +19,7 @@ public:
     void loadPreset (int index);
 
     const std::vector<Preset>& getAllPresets() const { return presets; }
+    void restoreCurrentPresetIndexFromState();
     int getCurrentPresetIndex() const { return currentPresetIndex; }
 
     void updatePresetList();

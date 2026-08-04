@@ -1,0 +1,117 @@
+#include "Rack.h"
+
+Rack::Rack (juce::AudioProcessorValueTreeState& apvtsToUse) : apvts (apvtsToUse)
+{
+    setupRotarySlider (driveSlider, driveLabel, "Drive");
+    driveAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "drive", driveSlider);
+
+    setupRotarySlider (widthSlider, widthLabel, "Filter Spread");
+    widthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "stereo_width", widthSlider);
+
+    setupRotarySlider (reverbMixSlider, reverbMixLabel, "Mix");
+    reverbMixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "reverb_mix", reverbMixSlider);
+
+    setupRotarySlider (reverbSizeSlider, reverbSizeLabel, "Size");
+    reverbSizeAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "reverb_size", reverbSizeSlider);
+
+    setupRotarySlider (shimmerAmountSlider, shimmerAmountLabel, "Shimmer");
+    shimmerAmountAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "shimmer_amount", shimmerAmountSlider);
+}
+
+Rack::~Rack()
+{
+
+}
+
+void Rack::setupRotarySlider (juce::Slider& slider, juce::Label& label, const juce::String& text)
+{
+    slider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 60, 20);
+    addAndMakeVisible (slider);
+
+    label.setText (text, juce::dontSendNotification);
+    label.setJustificationType (juce::Justification::centred);
+    label.setFont (juce::FontOptions (12.0f, juce::Font::bold));
+    addAndMakeVisible (label);
+}
+
+void Rack::drawRackModule (juce::Graphics& g, juce::Rectangle<int> area, const juce::String& title)
+{
+    auto bounds = area.toFloat();
+
+    g.setColour (juce::Colour::fromRGB (24, 28, 36));
+    g.fillRoundedRectangle (bounds, 6.0f);
+
+    g.setColour (juce::Colours::white.withAlpha (0.08f));
+    g.drawRoundedRectangle (bounds.reduced (0.5f), 6.0f, 1.0f);
+
+    g.setColour (juce::Colour::fromRGB (50, 55, 65));
+    g.fillEllipse (bounds.getX() + 8.0f, bounds.getCentreY() - 4.0f, 8.0f, 8.0f);
+    g.fillEllipse (bounds.getRight() - 16.0f, bounds.getCentreY() - 4.0f, 8.0f, 8.0f);
+
+    g.setColour (juce::Colours::white.withAlpha (0.85f));
+    g.setFont (juce::FontOptions (13.0f, juce::Font::bold));
+    g.drawText (title.toUpperCase(), static_cast<int>(bounds.getX() + 30.0f), static_cast<int>(bounds.getY() + 10.0f), 200, 20, juce::Justification::left);
+
+    g.setColour (juce::Colours::white.withAlpha (0.05f));
+    g.drawHorizontalLine (static_cast<int>(bounds.getY() + 32.0f), bounds.getX() + 30.0f, bounds.getRight() - 30.0f);
+}
+
+void Rack::paint (juce::Graphics& g)
+{
+    g.fillAll (juce::Colour::fromRGB (16, 18, 22));
+
+    auto bounds = getLocalBounds().reduced (10);
+    int gap = 8;
+    int moduleHeight = (bounds.getHeight() - (gap * 2)) / 3;
+
+    auto driveArea = bounds.removeFromTop (moduleHeight);
+    drawRackModule (g, driveArea, "01. Soft Clipping");
+
+    bounds.removeFromTop (gap);
+
+    auto widthArea = bounds.removeFromTop (moduleHeight);
+    drawRackModule (g, widthArea, "02. Stereo");
+
+    bounds.removeFromTop (gap);
+
+    auto reverbArea = bounds;
+    drawRackModule (g, reverbArea, "03. Shimmer Reverb");
+}
+
+void Rack::resized()
+{
+    auto bounds = getLocalBounds().reduced (10);
+    int gap = 8;
+    int moduleHeight = (bounds.getHeight() - (gap * 2)) / 3;
+
+    int knobWidth = 80;
+    int knobHeight = 80;
+    int labelHeight = 16;
+    int contentYOffset = 38;
+
+    auto driveArea = bounds.removeFromTop (moduleHeight);
+    int startX = driveArea.getX() + 40;
+    driveLabel.setBounds (startX, driveArea.getY() + contentYOffset, knobWidth, labelHeight);
+    driveSlider.setBounds (startX, driveArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
+
+    bounds.removeFromTop (gap);
+
+    auto widthArea = bounds.removeFromTop (moduleHeight);
+    widthLabel.setBounds (startX, widthArea.getY() + contentYOffset, knobWidth, labelHeight);
+    widthSlider.setBounds (startX, widthArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
+
+    bounds.removeFromTop (gap);
+
+    auto reverbArea = bounds;
+    int spacing = 110;
+
+    reverbMixLabel.setBounds (startX, reverbArea.getY() + contentYOffset, knobWidth, labelHeight);
+    reverbMixSlider.setBounds (startX, reverbArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
+
+    shimmerAmountLabel.setBounds (startX + spacing, reverbArea.getY() + contentYOffset, knobWidth, labelHeight);
+    shimmerAmountSlider.setBounds (startX + spacing, reverbArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
+
+    reverbSizeLabel.setBounds (startX + (spacing * 2), reverbArea.getY() + contentYOffset, knobWidth, labelHeight);
+    reverbSizeSlider.setBounds (startX + (spacing * 2), reverbArea.getY() + contentYOffset + labelHeight, knobWidth, knobHeight);
+}
