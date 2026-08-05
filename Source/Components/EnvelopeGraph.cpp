@@ -92,12 +92,22 @@ void EnvelopeGraph::paint (juce::Graphics& g)
     g.setColour (juce::Colours::white.withAlpha (0.08f));
     g.drawRoundedRectangle (graphArea, 4.0f, 1.0f);
 
-    g.setColour (juce::Colours::white.withAlpha (0.04f));
-    
-    float y100 = graphArea.getY();
-    float y50  = graphArea.getY() + graphArea.getHeight() * 0.5f;
-    float y0   = graphArea.getBottom();
+    float a = attackVal.load();  
+    float d = decayVal.load();
+    float s = sustainVal.load(); 
+    float r = releaseVal.load();
 
+    const float sustainHoldTime = 2.0f;
+    float totalEnvelopeTime = a + d + sustainHoldTime + r;
+
+    float maxGraphTime = juce::jlimit (2.0f, 16.0f, totalEnvelopeTime * 1.15f);
+    const float pixelsPerSecond = graphArea.getWidth() / maxGraphTime;
+
+    float y100 = graphArea.getY();
+    float y50 = graphArea.getY() + graphArea.getHeight() * 0.5f;
+    float y0 = graphArea.getBottom();
+
+    g.setColour (juce::Colours::white.withAlpha (0.04f));
     g.drawHorizontalLine (static_cast<int>(y50), graphArea.getX(), graphArea.getRight());
 
     g.setColour (juce::Colours::white.withAlpha (0.3f));
@@ -106,34 +116,40 @@ void EnvelopeGraph::paint (juce::Graphics& g)
     g.drawText ("0.5", static_cast<int>(graphArea.getX() + 4), static_cast<int>(y50 - 5), 24, 10, juce::Justification::left);
     g.drawText ("0.0", static_cast<int>(graphArea.getX() + 4), static_cast<int>(y0 - 12), 24, 10, juce::Justification::left);
 
-    float a = attackVal.load();  
-    float d = decayVal.load();
-    float s = sustainVal.load(); 
-    float r = releaseVal.load();
+    int gridInterval = 1;
+    if (maxGraphTime > 12.0f)
+        gridInterval = 3;
+    else if (maxGraphTime > 6.0f)
+        gridInterval = 2;
 
-    float totalTime = juce::jmax (0.1f, a + d + 0.8f + r); 
-    float width = graphArea.getWidth();
+    for (int sec = gridInterval; sec < static_cast<int>(maxGraphTime); sec += gridInterval)
+    {
+        float xPos = graphArea.getX() + (sec * pixelsPerSecond);
+
+        g.setColour (juce::Colours::white.withAlpha (0.04f));
+        g.drawVerticalLine (static_cast<int>(xPos), graphArea.getY(), graphArea.getBottom());
+
+        g.setColour (juce::Colours::white.withAlpha (0.2f));
+        g.setFont (juce::FontOptions (8.0f));
+        g.drawText (juce::String (sec) + "s", static_cast<int>(xPos - 10.0f), static_cast<int>(y0 - 10.0f), 20, 10, juce::Justification::centred);
+    }
+
     float height = graphArea.getHeight();
 
     float p1X = graphArea.getX();
     float p1Y = graphArea.getBottom();
 
-    float p2X = p1X + (a / totalTime) * width;
+    float p2X = juce::jmin (p1X + (a * pixelsPerSecond), graphArea.getRight());
     float p2Y = graphArea.getY();
 
-    float p3X = p2X + (d / totalTime) * width;
+    float p3X = juce::jmin (p2X + (d * pixelsPerSecond), graphArea.getRight());
     float p3Y = graphArea.getBottom() - (s * height);
 
-    float p4X = p3X + (0.8f / totalTime) * width;
+    float p4X = juce::jmin (p3X + (sustainHoldTime * pixelsPerSecond), graphArea.getRight());
     float p4Y = p3Y;
 
-    float p5X = p4X + (r / totalTime) * width;
+    float p5X = juce::jmin (p4X + (r * pixelsPerSecond), graphArea.getRight());
     float p5Y = graphArea.getBottom();
-
-    g.setColour (juce::Colours::white.withAlpha (0.04f));
-    g.drawVerticalLine (static_cast<int>(p2X), graphArea.getY(), graphArea.getBottom());
-    g.drawVerticalLine (static_cast<int>(p3X), graphArea.getY(), graphArea.getBottom());
-    g.drawVerticalLine (static_cast<int>(p4X), graphArea.getY(), graphArea.getBottom());
 
     juce::Path envPath;
     envPath.startNewSubPath (p1X, p1Y);
@@ -164,4 +180,5 @@ void EnvelopeGraph::paint (juce::Graphics& g)
     drawNode (p2X, p2Y);
     drawNode (p3X, p3Y);
     drawNode (p4X, p4Y);
+    drawNode (p5X, p5Y);
 }
