@@ -132,6 +132,8 @@ public:
 
     juce::MidiKeyboardState& getKeyboardState() { return keyboardState; }
 
+    float getCurrentEnvelopeLevel() const { return currentEnvelopeLevel.load(); }
+
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     PresetManager presetManager { apvts };
@@ -160,6 +162,8 @@ private:
     std::atomic<float>* sustainParam { nullptr };
     std::atomic<float>* releaseParam { nullptr };
     juce::ADSR::Parameters lastAdsrParams;
+
+    std::atomic<float> currentEnvelopeLevel { 0.0f };
 
     void updateNoiseSourceSelection (int choice);
     SampleLoopPlayer factorySamplePlayer;

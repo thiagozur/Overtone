@@ -5,7 +5,7 @@ OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcess
     : AudioProcessorEditor (&p),
       audioProcessor (p),
       headerBar (audioProcessor.getAPVTS(), audioProcessor.getPresetManager()),
-      orbitNodes (audioProcessor.getAPVTS()),
+      orbitNodes (audioProcessor),
       envelopeGraph (audioProcessor.getAPVTS()),
       noisePanel (audioProcessor.getAPVTS()),
       rack (audioProcessor.getAPVTS()), 

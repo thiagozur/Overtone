@@ -458,6 +458,8 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
     for (int s = 0; s < buffer.getNumSamples(); ++s)
         getNoiseSample(noiseLPtr[s], noiseRPtr[s], sourceChoice);
+    
+    float maxBlockEnvelope = 0.0f;
 
     for (auto& voice : voices)
     {
@@ -472,7 +474,11 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
                 break;
             }
 
-            float env = voice.adsr.getNextSample() * voice.velocity;
+            float envRaw = voice.adsr.getNextSample();
+            float env = envRaw * voice.velocity;
+
+            if (envRaw > maxBlockEnvelope)
+                maxBlockEnvelope = envRaw;
 
             if (env < 0.00001f)
                 continue;
@@ -501,6 +507,8 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             rightChannel[sample] += harmonicSumR * globalGainCompensation * env * 0.3f;
         }
     }
+
+    currentEnvelopeLevel.store (maxBlockEnvelope);
 
     if (chorusAmount > 0.001f)
     {
