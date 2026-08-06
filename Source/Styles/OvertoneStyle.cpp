@@ -1,0 +1,197 @@
+#include "OvertoneStyle.h"
+
+OvertoneStyle::OvertoneStyle()
+{
+    setColour (juce::Slider::thumbColourId, juce::Colour (0xFF00A0D2));
+    setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xFF00A0D2));
+    setColour (juce::Slider::rotarySliderOutlineColourId, juce::Colour (0xFF2A2A30));
+    setColour (juce::Slider::textBoxTextColourId, juce::Colours::white.withAlpha (0.7f));
+
+    setColour (juce::ComboBox::backgroundColourId, juce::Colour (0xFF111113));
+    setColour (juce::ComboBox::outlineColourId, juce::Colour (0xFF5E6153));
+    setColour (juce::ComboBox::focusedOutlineColourId, juce::Colour (0xFF00A0D2));
+    setColour (juce::ComboBox::arrowColourId, juce::Colours::white.withAlpha (0.9f));
+    setColour (juce::ComboBox::textColourId, juce::Colours::white.withAlpha (0.9f));
+
+    setColour (juce::TextButton::buttonColourId, juce::Colour (0xFF111113));
+    setColour (juce::TextButton::buttonOnColourId, juce::Colour (0xFF00A0D2));
+    setColour (juce::TextButton::textColourOffId, juce::Colours::white.withAlpha (0.8f));
+    setColour (juce::TextButton::textColourOnId, juce::Colours::black);
+
+    setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.7f));
+
+    setColour (backgroundColourId, juce::Colour (0xFF2D360C));
+    setColour (darkBackgroundColourId, juce::Colour (0xFF2D360C).darker (0.9f));
+    setColour (accentColourId, juce::Colour (0xFFADC944));
+    setColour (pastelToneId, juce::Colour (0xFF4C5C12));
+}
+
+void OvertoneStyle::drawLabel (juce::Graphics& g, juce::Label& label)
+{
+    g.fillAll (label.findColour (juce::Label::backgroundColourId));
+
+    if (! label.isBeingEdited())
+    {
+        auto alpha = label.isEnabled() ? 1.0f : 0.5f;
+        const juce::Font font (juce::FontOptions (14.0f, juce::Font::bold));
+
+        g.setFont (font);
+        g.setColour (juce::Colours::white.withAlpha (0.8f).withMultipliedAlpha (alpha));
+
+        auto area = label.getLocalBounds().toFloat();
+        g.drawFittedText (label.getText(), area.getSmallestIntegerContainer(), juce::Justification::centred, 2);
+    }
+}
+
+void OvertoneStyle::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+{
+    auto bounds = juce::Rectangle<float> (static_cast<float>(x), static_cast<float>(y), static_cast<float>(width), static_cast<float>(height)).reduced (10.0f);
+    auto tooltipGap = bounds.removeFromBottom (15);
+    auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
+    auto centreY = bounds.getCentreY();
+    auto centreX = bounds.getCentreX();
+
+    const int numTicks = 9;
+    const float tickRadiusOuter = radius * 1.1f;
+    const float tickRadiusInner = radius * 0.9f;
+
+    g.setColour (juce::Colours::white.withAlpha (0.8f));
+
+    for (int i = 0; i < numTicks; ++i)
+    {
+        float angle = rotaryStartAngle + (i / static_cast<float>(numTicks - 1)) * (rotaryEndAngle - rotaryStartAngle);
+
+        auto outerPoint = juce::Point<float> (centreX + tickRadiusOuter * std::sin (angle), centreY - tickRadiusOuter * std::cos (angle));
+        auto innerPoint = juce::Point<float> (centreX + tickRadiusInner * std::sin (angle), centreY - tickRadiusInner * std::cos (angle));
+
+        g.drawLine (juce::Line<float> (innerPoint, outerPoint), 1.5f);
+    }
+
+    g.setFont (12.0f);
+    g.setColour (juce::Colours::white.withAlpha (0.8f));
+
+    auto minPoint = juce::Point<float> (centreX + (radius + 12.0f) * std::sin (rotaryStartAngle), centreY - (radius + 12.0f) * std::cos (rotaryStartAngle));
+    g.drawText (juce::String (static_cast<int>(slider.getRange().getStart())), juce::Rectangle<float> (22.0f, 12.0f).withCentre (minPoint), juce::Justification::centred, false);
+    
+    auto maxPoint = juce::Point<float> (centreX + (radius + 12.0f) * std::sin (rotaryEndAngle), centreY - (radius + 12.0f) * std::cos (rotaryEndAngle));
+    g.drawText (juce::String (static_cast<int>(slider.getRange().getEnd())), juce::Rectangle<float> (22.0f, 12.0f).withCentre (maxPoint), juce::Justification::centred, false);
+
+    auto knobRadius = radius * 0.75f;
+    auto knobBounds = juce::Rectangle<float> (centreX - knobRadius, centreY - knobRadius, knobRadius * 2.0f, knobRadius * 2.0f);
+
+    juce::Colour knobBaseColour (0XFFD4BB81);
+    g.setColour (knobBaseColour);
+    g.fillEllipse (knobBounds);
+
+    juce::ColourGradient borderGrad (knobBaseColour.brighter (0.25f), centreX, centreY - knobRadius, knobBaseColour.darker (2.0f), centreX, centreY + knobRadius, false);
+    g.setGradientFill (borderGrad);
+    g.drawEllipse (knobBounds, 3.0f);
+
+    float currentAngle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
+        
+    juce::Path cursor;
+    auto cursorLength = knobRadius * 0.55f;
+    auto cursorThickness = 2.0f;
+    auto overhang = 2.0f;
+
+    cursor.addRectangle (-cursorThickness * 0.5f, -knobRadius - overhang, cursorThickness, cursorLength + overhang);
+    cursor.applyTransform (juce::AffineTransform::rotation (currentAngle).translated (centreX, centreY));
+
+    g.setColour (knobBaseColour.darker (6.0f).withAlpha (0.8f));
+    g.fillPath (cursor);
+
+    if (slider.isMouseButtonDown())
+    {
+        juce::String valueText = slider.getTextFromValue (slider.getValue());
+        if (valueText.isEmpty())
+            valueText = juce::String (slider.getValue(), 1);
+        
+        juce::Font tooltipFont (juce::FontOptions (11.0f, juce::Font::bold));
+        g.setFont (tooltipFont);
+        
+        juce::GlyphArrangement glyphs;
+        glyphs.addFittedText (tooltipFont, valueText, 0.0f, 0.0f, 1000.0f, 20.0f, juce::Justification::left, 1);
+        int textWidth = static_cast<int> (glyphs.getBoundingBox (0, -1, true).getWidth()) + 14;
+        int textHeight = 18;
+
+        float bubbleX = centreX - (textWidth / 2.0f);
+        float bubbleY = centreY + knobRadius + 8.0f;
+
+        juce::Rectangle<float> bubbleArea (bubbleX, bubbleY, static_cast<float>(textWidth), static_cast<float>(textHeight));
+
+        g.setColour (juce::Colours::black.withAlpha (0.4f));
+        g.fillRoundedRectangle (bubbleArea.translated (0.0f, 1.5f), 4.0f);
+
+        g.setColour (slider.findColour(OvertoneStyle::darkBackgroundColourId));
+        g.fillRoundedRectangle (bubbleArea, 4.0f);
+
+        g.setColour (slider.findColour (OvertoneStyle::accentColourId).withAlpha (0.8f));
+        g.drawRoundedRectangle (bubbleArea, 4.0f, 1.0f);
+
+        g.setColour (juce::Colours::white);
+        g.drawText (valueText, bubbleArea, juce::Justification::centred, false);
+    }
+}
+
+void OvertoneStyle::drawComboBox (juce::Graphics& g, int width, int height, bool /* isButtonDown */, int /* buttonX */, int /* buttonY */, int /* buttonW */, int /* buttonH */, juce::ComboBox& box)
+{
+    auto cornerSize = 4.0f;
+    auto bounds = juce::Rectangle<int> (0, 0, width, height).toFloat();
+
+    g.setColour (box.findColour (darkBackgroundColourId));
+    g.fillRoundedRectangle(bounds.reduced (2.0f), cornerSize);
+
+    g.setColour (box.findColour (juce::ComboBox::outlineColourId));
+    g.drawRoundedRectangle (bounds.reduced (2.0f), cornerSize, 1.0f);
+
+    juce::Path arrow;
+    float arrowW = 8.0f;
+    float arrowH = 4.0f;
+    float centerX = width - 18.0f;
+    float centerY = height / 2.0f;
+
+    arrow.startNewSubPath (centerX - arrowW / 2.0f, centerY - arrowH / 2.0f);
+    arrow.lineTo (centerX + arrowW / 2.0f, centerY - arrowH /2.0f);
+    arrow.lineTo (centerX, centerY + arrowH / 2.0f);
+    arrow.closeSubPath();
+
+    g.setColour (box.findColour (juce::ComboBox::arrowColourId).withAlpha (box.isEnabled() ? 1.0f : 0.3f));
+    g.fillPath (arrow);
+}
+
+void OvertoneStyle::drawButtonBackground (juce::Graphics& g, juce::Button& button, const juce::Colour& /* backgroundColour */, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    auto bounds = button.getLocalBounds().toFloat();
+    auto cornerSize = 4.0f;
+
+    auto baseColour = button.getToggleState() ? button.findColour (juce::TextButton::buttonOnColourId) : button.findColour (darkBackgroundColourId);
+
+    if (shouldDrawButtonAsDown)
+        baseColour = baseColour.darker (0.4f);
+    else if (shouldDrawButtonAsHighlighted)
+        baseColour = baseColour.brighter (0.15f);
+
+    if (! button.isEnabled())
+        baseColour = baseColour.withAlpha (0.35f);
+
+    g.setColour (baseColour);
+    g.fillRoundedRectangle (bounds.reduced (2.0f), cornerSize);
+
+    auto outlineColour = button.isEnabled() ? (shouldDrawButtonAsHighlighted ? juce::Colour (0xFF5E6153).brighter (0.15f) : juce::Colour (0xFF5E6153)) : juce::Colour (0xFF535660).withAlpha (0.2f);
+
+    g.setColour (outlineColour);
+    g.drawRoundedRectangle (bounds.reduced (2.0f), cornerSize, 1.0f);
+}
+
+void OvertoneStyle::drawButtonText (juce::Graphics& g, juce::TextButton& button, bool /* shouldDrawButtonAsHighlighted */, bool /* shouldDrawButtonAsDown */)
+{
+    auto area = button.getLocalBounds().toFloat();
+    
+    const juce::Font font (juce::FontOptions (14.0f, juce::Font::bold));
+    g.setFont (font);
+
+    auto alpha = button.isEnabled() ? 1.0f : 0.5f;
+    g.setColour (juce::Colours::white.withAlpha (0.8f).withMultipliedAlpha (alpha));
+
+    g.drawFittedText (button.getButtonText(), area.getSmallestIntegerContainer(), juce::Justification::centred, 2);
+}

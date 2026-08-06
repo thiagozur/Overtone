@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "../PluginProcessor.h"
+#include "../Styles/OvertoneStyle.h"
 
 class OrbitNodes : public juce::Component, private juce::AudioProcessorValueTreeState::Listener, private juce::Timer
 {
@@ -48,8 +49,6 @@ private:
     int activeDraggingIndex = -1;
 
     const juce::Colour coreColour  { juce::Colour::fromRGB (255, 180, 80) };
-    const juce::Colour nodeColour { juce::Colour::fromRGB (80, 200, 255) };
-    const juce::Colour tetherColour { juce::Colour::fromRGBA (80, 200, 255, 100) };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OrbitNodes)
 };

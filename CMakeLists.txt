@@ -51,6 +51,10 @@ target_sources(Overtone PRIVATE
     Source/Components/HeaderBar.cpp
     Source/Components/Rack.h
     Source/Components/Rack.cpp
+    Source/Styles/OvertoneStyle.h
+    Source/Styles/OvertoneStyle.cpp
+    Source/Styles/PctKnobStyle.h
+    Source/Styles/PctKnobStyle.cpp
 )
 
 juce_add_binary_data(FactoryAudioData

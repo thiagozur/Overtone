@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "../Tools/PresetManager.h"
+#include "../Styles/OvertoneStyle.h"
 
 class HeaderBar : public juce::Component
 {

@@ -84,7 +84,7 @@ void OrbitNodes::updateNodePositions()
 
 void OrbitNodes::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour::fromRGB (18, 20, 24));
+    g.fillAll (getLookAndFeel().findColour (OvertoneStyle::backgroundColourId));
 
     float qVal = currentQ.load();
     float normQ = juce::jmap (qVal, 5.0f, 150.0f, 1.0f, 0.0f); 
@@ -95,7 +95,7 @@ void OrbitNodes::paint (juce::Graphics& g)
     juce::Path arenaDisc;
     arenaDisc.addEllipse (centerPoint.x - maxOrbitRadius - 5.0f, centerPoint.y - maxOrbitRadius - 5.0f, maxOrbitRadius * 2.0f + 10.0f, maxOrbitRadius * 2.0f + 10.0f);
 
-    g.setColour (juce::Colour::fromRGB (8, 9, 12));
+    g.setColour (getLookAndFeel().findColour (OvertoneStyle::darkBackgroundColourId).darker (2.0f));
     g.fillPath (arenaDisc);
 
     g.setColour (juce::Colours::white.withAlpha (0.08f));
@@ -121,6 +121,7 @@ void OrbitNodes::paint (juce::Graphics& g)
         g.setColour (juce::Colours::white.withAlpha (0.05f));
         g.drawLine (minPos.x, minPos.y, maxPos.x, maxPos.y, 1.0f);
 
+        juce::Colour tetherColour (getLookAndFeel().findColour (OvertoneStyle::accentColourId).withAlpha (0.4f));
         g.setColour (tetherColour.withMultipliedAlpha (0.2f + gain * 0.8f));
         g.drawLine (minPos.x, minPos.y, pos.x, pos.y, 1.5f + gain * 1.5f);
         
@@ -128,6 +129,7 @@ void OrbitNodes::paint (juce::Graphics& g)
         float glowOffset = 1.0f + 2.0f * (gain + (1.0f - gain) * normQ);
         float maxNodeRadius = baseRadius + glowOffset;
         
+        juce::Colour nodeColour (getLookAndFeel().findColour (OvertoneStyle::accentColourId));
         juce::Colour baseColor = nodes[i].isDragging ? juce::Colours::white : nodeColour.withMultipliedAlpha (0.5f + gain * 0.5f);
 
         juce::Colour centerColor = baseColor;
@@ -153,15 +155,28 @@ void OrbitNodes::paint (juce::Graphics& g)
         g.setColour (baseColor.withAlpha (0.95f));
         g.fillEllipse (pos.x - innerDiscRadius, pos.y - innerDiscRadius, innerDiscRadius * 2.0f, innerDiscRadius * 2.0f);
 
-        float labelRadius = maxOrbitRadius + 22.0f; 
-        juce::Point<float> labelPos = centerPoint + juce::Point<float> (
-            std::cos (nodes[i].baseAngle) * labelRadius,
-            std::sin (nodes[i].baseAngle) * labelRadius
+        float badgeRadius = maxOrbitRadius + 25.0f;
+        juce::Point<float> badgePos = centerPoint + juce::Point<float> (
+            std::cos (nodes[i].baseAngle) * badgeRadius,
+            std::sin (nodes[i].baseAngle) * badgeRadius
         );
 
-        g.setColour (gain > 0.05f ? juce::Colours::white : juce::Colours::white.withAlpha (0.35f));
-        g.setFont (juce::FontOptions (13.0f, juce::Font::bold));
-        g.drawText (juce::String (i + 1), static_cast<int>(labelPos.x - 12), static_cast<int>(labelPos.y - 12), 24, 24, juce::Justification::centred);
+        bool isActive = nodes[i].isDragging || (gain > 0.05f);
+        float badgeSize = isActive ? 22.0f : 20.0f;
+        juce::Rectangle<float> badgeBounds (badgePos.x - (badgeSize / 2.0f), badgePos.y - (badgeSize / 2.0f), badgeSize, badgeSize);
+
+        juce::Colour badgeBg = getLookAndFeel().findColour (OvertoneStyle::darkBackgroundColourId).darker (0.5f);
+        g.setColour (badgeBg);
+        g.fillEllipse (badgeBounds);
+
+        juce::Colour borderCol = isActive ? getLookAndFeel().findColour (OvertoneStyle::pastelToneId).brighter (0.15f) : juce::Colours::white.withAlpha (0.15f);
+        g.setColour (borderCol);
+        g.drawEllipse (badgeBounds, isActive ? 1.5f : 1.0f);
+
+        juce::Colour textCol = isActive ? (nodes[i].isDragging ? getLookAndFeel().findColour (OvertoneStyle::accentColourId).brighter (0.3f) : getLookAndFeel().findColour (OvertoneStyle::accentColourId)) : juce::Colours::white.withAlpha (0.4f);
+        g.setColour (textCol);
+        g.setFont (juce::FontOptions (14.0f, isActive ? juce::Font::bold : juce::Font::plain));
+        g.drawText (juce::String (i + 1), badgeBounds, juce::Justification::centred, false);
     }
 
     float coreRadius = juce::jmap (envelopeLevel, 0.0f, 1.0f, 6.0f, 18.0f);

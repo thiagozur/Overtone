@@ -12,8 +12,10 @@ NoiseSource::NoiseSource (juce::AudioProcessorValueTreeState& apvtsToUse) : apvt
 
     selectorAttach = std::make_unique<ComboAttachment> (apvts, "noise_source", noiseSelector);
 
+    gainAttach = std::make_unique<SliderAttachment> (apvts, "master_gain", noiseGainSlider);
+
     noiseGainSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    noiseGainSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 14);
+    noiseGainSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     addAndMakeVisible (noiseGainSlider);
 
     noiseGainLabel.setText ("GAIN", juce::dontSendNotification);
@@ -22,19 +24,17 @@ NoiseSource::NoiseSource (juce::AudioProcessorValueTreeState& apvtsToUse) : apvt
     noiseGainLabel.setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.7f));
     addAndMakeVisible (noiseGainLabel);
 
-    gainAttach = std::make_unique<SliderAttachment> (apvts, "master_gain", noiseGainSlider);
+    qAttach = std::make_unique<SliderAttachment> (apvts, "resonance_q", qSlider);
 
     qSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    qSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 14);
+    qSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     addAndMakeVisible (qSlider);
 
     qLabel.setText ("Q", juce::dontSendNotification);
     qLabel.setFont (juce::FontOptions (10.0f, juce::Font::bold));
     qLabel.setJustificationType (juce::Justification::centred);
     qLabel.setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.7f));
-    addAndMakeVisible (qLabel);
-
-    qAttach = std::make_unique<SliderAttachment> (apvts, "resonance_q", qSlider);
+    addAndMakeVisible (qLabel);    
 }
 
 NoiseSource::~NoiseSource()
@@ -46,8 +46,8 @@ void NoiseSource::resized()
 {
     auto bounds = getLocalBounds().reduced (8);
 
-    auto dropArea = bounds.removeFromTop (bounds.getHeight() / 2);
-    noiseSelector.setBounds (dropArea.removeFromTop (24));
+    auto dropArea = bounds.removeFromTop (bounds.getHeight() / 3);
+    noiseSelector.setBounds (dropArea.removeFromTop (36));
 
     auto knobArea = bounds;
     int knobWidth = knobArea.getWidth() / 2;
@@ -63,9 +63,11 @@ void NoiseSource::resized()
 
 void NoiseSource::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour::fromRGB (18, 20, 24));
-
     auto bounds = getLocalBounds().toFloat().reduced (2.0f);
+
+    g.setColour (getLookAndFeel().findColour (OvertoneStyle::darkBackgroundColourId));
+    g.fillRoundedRectangle (bounds, 4.0f);
+
     g.setColour (isDraggingFileOver ? juce::Colour::fromRGB (80, 200, 255) : juce::Colours::white.withAlpha (0.08f));
     g.drawRoundedRectangle (bounds, 4.0f, isDraggingFileOver ? 2.0f : 1.0f);
 

@@ -1,29 +1,35 @@
 #include "EnvelopeGraph.h"
 
+static constexpr int knobAreaHeight = 90;
+
 EnvelopeGraph::EnvelopeGraph (juce::AudioProcessorValueTreeState& apvtsToUse) : apvts (apvtsToUse)
 {
+    attackAttach = std::make_unique<SliderAttachment> (apvts, "attack", attackSlider);
+    decayAttach = std::make_unique<SliderAttachment> (apvts, "decay", decaySlider);
+    sustainAttach = std::make_unique<SliderAttachment> (apvts, "sustain", sustainSlider);
+    releaseAttach = std::make_unique<SliderAttachment> (apvts, "release", releaseSlider);
+
     auto setupSlider = [this] (juce::Slider& slider, juce::Label& label, const juce::String& name)
     {
         slider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-        slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 14);
+        slider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+        
+        slider.onDragStart = [&slider] { slider.repaint(); };
+        slider.onDragEnd = [&slider] { slider.repaint(); };
+
         addAndMakeVisible (slider);
 
         label.setText (name, juce::dontSendNotification);
         label.setFont (juce::FontOptions (11.0f, juce::Font::bold));
         label.setJustificationType (juce::Justification::centred);
-        label.setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.7f));
         addAndMakeVisible (label);
     };
 
     setupSlider (attackSlider, attackLabel, "A");
     setupSlider (decaySlider, decayLabel, "D");
+    sustainSlider.setLookAndFeel (&pctKnobStyle);
     setupSlider (sustainSlider, sustainLabel, "S");
     setupSlider (releaseSlider, releaseLabel, "R");
-
-    attackAttach = std::make_unique<SliderAttachment> (apvts, "attack", attackSlider);
-    decayAttach = std::make_unique<SliderAttachment> (apvts, "decay", decaySlider);
-    sustainAttach = std::make_unique<SliderAttachment> (apvts, "sustain", sustainSlider);
-    releaseAttach = std::make_unique<SliderAttachment> (apvts, "release", releaseSlider);
 
     apvts.addParameterListener ("attack", this);
     apvts.addParameterListener ("decay", this);
@@ -67,7 +73,7 @@ void EnvelopeGraph::resized()
 {
     auto bounds = getLocalBounds();
 
-    auto knobArea = bounds.removeFromBottom (75);
+    auto knobArea = bounds.removeFromBottom (knobAreaHeight);
     int knobWidth = knobArea.getWidth() / 4;
 
     auto setKnobBounds = [&knobArea, knobWidth] (juce::Slider& slider, juce::Label& label, int /* index */)
@@ -85,9 +91,15 @@ void EnvelopeGraph::resized()
 
 void EnvelopeGraph::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour::fromRGB (18, 20, 24));
+    auto bounds = getLocalBounds().toFloat().reduced (2.0f);
 
-    auto graphArea = getLocalBounds().removeFromTop (getHeight() - 75).toFloat().reduced (12.0f);
+    g.setColour (getLookAndFeel().findColour (OvertoneStyle::darkBackgroundColourId));
+    g.fillRoundedRectangle (bounds, 4.0f);
+
+    g.setColour (juce::Colours::white.withAlpha (0.08f));
+    g.drawRoundedRectangle (bounds, 4.0f, 1.0f);
+
+    auto graphArea = bounds.removeFromTop (getHeight() - static_cast<float>(knobAreaHeight)).toFloat().reduced (12.0f);
 
     g.setColour (juce::Colours::white.withAlpha (0.08f));
     g.drawRoundedRectangle (graphArea, 4.0f, 1.0f);
@@ -111,7 +123,7 @@ void EnvelopeGraph::paint (juce::Graphics& g)
     g.drawHorizontalLine (static_cast<int>(y50), graphArea.getX(), graphArea.getRight());
 
     g.setColour (juce::Colours::white.withAlpha (0.3f));
-    g.setFont (juce::FontOptions (9.0f));
+    g.setFont (juce::FontOptions (12.0f));
     g.drawText ("1.0", static_cast<int>(graphArea.getX() + 4), static_cast<int>(y100 + 2), 24, 10, juce::Justification::left);
     g.drawText ("0.5", static_cast<int>(graphArea.getX() + 4), static_cast<int>(y50 - 5), 24, 10, juce::Justification::left);
     g.drawText ("0.0", static_cast<int>(graphArea.getX() + 4), static_cast<int>(y0 - 12), 24, 10, juce::Justification::left);
@@ -129,8 +141,8 @@ void EnvelopeGraph::paint (juce::Graphics& g)
         g.setColour (juce::Colours::white.withAlpha (0.04f));
         g.drawVerticalLine (static_cast<int>(xPos), graphArea.getY(), graphArea.getBottom());
 
-        g.setColour (juce::Colours::white.withAlpha (0.2f));
-        g.setFont (juce::FontOptions (8.0f));
+        g.setColour (juce::Colours::white.withAlpha (0.3f));
+        g.setFont (juce::FontOptions (12.0f));
         g.drawText (juce::String (sec) + "s", static_cast<int>(xPos - 10.0f), static_cast<int>(y0 - 10.0f), 20, 10, juce::Justification::centred);
     }
 
@@ -169,11 +181,11 @@ void EnvelopeGraph::paint (juce::Graphics& g)
     g.setColour (graphColour);
     g.strokePath (envPath, juce::PathStrokeType (2.0f, juce::PathStrokeType::curved));
 
-    auto drawNode = [&g] (float x, float y)
+    auto drawNode = [&g, this] (float x, float y)
     {
         g.setColour (juce::Colours::white);
         g.fillEllipse (x - 3.5f, y - 3.5f, 7.0f, 7.0f);
-        g.setColour (juce::Colour::fromRGB (80, 200, 255));
+        g.setColour (graphColour.brighter (0.15f));
         g.drawEllipse (x - 5.5f, y - 5.5f, 11.0f, 11.0f, 1.0f);
     };
 

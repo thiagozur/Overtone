@@ -7,6 +7,7 @@
 #include "Components/EnvelopeGraph.h"
 #include "Components/NoiseSource.h"
 #include "Components/Rack.h"
+#include "Styles/OvertoneStyle.h"
 
 class OvertoneAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
@@ -19,6 +20,8 @@ public:
 
 private:
     OvertoneAudioProcessor& audioProcessor;
+
+    OvertoneStyle overtoneStyle;
 
     HeaderBar headerBar;
     OrbitNodes orbitNodes;

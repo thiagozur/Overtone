@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../Styles/PctKnobStyle.h"
 
 class EnvelopeGraph : public juce::Component, private juce::AudioProcessorValueTreeState::Listener, private juce::Timer
 {
@@ -16,6 +17,7 @@ private:
     void timerCallback() override;
 
     juce::AudioProcessorValueTreeState& apvts;
+    PctKnobStyle pctKnobStyle;
 
     std::atomic<float> attackVal { 0.1f };
     std::atomic<float> decayVal { 0.3f };
@@ -38,8 +40,8 @@ private:
     std::unique_ptr<SliderAttachment> sustainAttach;
     std::unique_ptr<SliderAttachment> releaseAttach;
 
-    const juce::Colour graphColour { juce::Colour::fromRGB (80, 200, 255) };
-    const juce::Colour fillColour { juce::Colour::fromRGBA (80, 200, 255, 30) };
+    const juce::Colour graphColour { juce::Colour::fromRGB (255, 180, 80) };
+    const juce::Colour fillColour { juce::Colour::fromRGBA (255, 180, 80, 30) };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EnvelopeGraph)
 };

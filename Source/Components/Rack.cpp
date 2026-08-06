@@ -5,18 +5,23 @@ Rack::Rack (juce::AudioProcessorValueTreeState& apvtsToUse) : apvts (apvtsToUse)
     setupRotarySlider (driveSlider, driveLabel, "Drive");
     driveAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "drive", driveSlider);
 
+    widthSlider.setLookAndFeel (&pctKnobStyle);
     setupRotarySlider (widthSlider, widthLabel, "Detune Spread");
     widthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "stereo_width", widthSlider);
 
-    setupRotarySlider (chorusSlider, chorusLabel, "Chorus");
+    chorusSlider.setLookAndFeel (&pctKnobStyle);
+    setupRotarySlider (chorusSlider, chorusLabel, "Chorus Mix");
     chorusAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "chorus_amount", chorusSlider);
 
+    reverbMixSlider.setLookAndFeel (&pctKnobStyle);
     setupRotarySlider (reverbMixSlider, reverbMixLabel, "Mix");
     reverbMixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "reverb_mix", reverbMixSlider);
 
+    reverbSizeSlider.setLookAndFeel (&pctKnobStyle);
     setupRotarySlider (reverbSizeSlider, reverbSizeLabel, "Size");
     reverbSizeAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "reverb_size", reverbSizeSlider);
 
+    shimmerAmountSlider.setLookAndFeel (&pctKnobStyle);
     setupRotarySlider (shimmerAmountSlider, shimmerAmountLabel, "Shimmer");
     shimmerAmountAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "shimmer_amount", shimmerAmountSlider);
 }
@@ -29,7 +34,7 @@ Rack::~Rack()
 void Rack::setupRotarySlider (juce::Slider& slider, juce::Label& label, const juce::String& text)
 {
     slider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 60, 20);
+    slider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     addAndMakeVisible (slider);
 
     label.setText (text, juce::dontSendNotification);
@@ -42,17 +47,17 @@ void Rack::drawRackModule (juce::Graphics& g, juce::Rectangle<int> area, const j
 {
     auto bounds = area.toFloat();
 
-    g.setColour (juce::Colour::fromRGB (24, 28, 36));
+    g.setColour (getLookAndFeel().findColour (OvertoneStyle::darkBackgroundColourId));
     g.fillRoundedRectangle (bounds, 6.0f);
 
     g.setColour (juce::Colours::white.withAlpha (0.08f));
     g.drawRoundedRectangle (bounds.reduced (0.5f), 6.0f, 1.0f);
 
-    g.setColour (juce::Colour::fromRGB (50, 55, 65));
+    g.setColour (juce::Colours::white.withAlpha (0.05f));
     g.fillEllipse (bounds.getX() + 8.0f, bounds.getCentreY() - 4.0f, 8.0f, 8.0f);
     g.fillEllipse (bounds.getRight() - 16.0f, bounds.getCentreY() - 4.0f, 8.0f, 8.0f);
 
-    g.setColour (juce::Colours::white.withAlpha (0.85f));
+    g.setColour (juce::Colours::white.withAlpha (0.8f));
     g.setFont (juce::FontOptions (13.0f, juce::Font::bold));
     g.drawText (title.toUpperCase(), static_cast<int>(bounds.getX() + 30.0f), static_cast<int>(bounds.getY() + 10.0f), 200, 20, juce::Justification::left);
 
@@ -62,7 +67,7 @@ void Rack::drawRackModule (juce::Graphics& g, juce::Rectangle<int> area, const j
 
 void Rack::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour::fromRGB (16, 18, 22));
+    g.fillAll (getLookAndFeel().findColour (OvertoneStyle::backgroundColourId));
 
     auto bounds = getLocalBounds().reduced (10);
     int gap = 8;

@@ -78,7 +78,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
     params.push_back (std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID { "master_gain", 1 },
         "Master Gain",
-        juce::NormalisableRange<float>(-48.0f, 24.0f, 0.1f),
+        juce::NormalisableRange<float>(-24.0f, 24.0f, 0.1f),
         0.0f,
         juce::AudioParameterFloatAttributes().withLabel ("dB")
     ));

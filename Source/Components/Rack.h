@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../Styles/PctKnobStyle.h"
 
 class Rack : public juce::Component
 {
@@ -13,6 +14,7 @@ public:
 
 private:
     juce::AudioProcessorValueTreeState& apvts;
+    PctKnobStyle pctKnobStyle;
 
     juce::Slider driveSlider;
     juce::Label driveLabel;

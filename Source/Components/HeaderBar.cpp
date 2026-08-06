@@ -19,8 +19,6 @@ HeaderBar::HeaderBar (juce::AudioProcessorValueTreeState& apvtsToUse, PresetMana
         if (onPageSwitched) onPageSwitched (1);
     };
 
-    updateButtonStyles();
-
     addAndMakeVisible (presetSelector);
     presetSelector.onChange = [this]
     {
@@ -145,36 +143,38 @@ void HeaderBar::updatePresetList()
 
 void HeaderBar::updateButtonStyles()
 {
-    const juce::Colour activeCol = juce::Colour::fromRGB (80, 200, 255);
-    const juce::Colour inactiveCol = juce::Colour::fromRGB (30, 34, 42);
+    const auto toggleCol = findColour (OvertoneStyle::pastelToneId);
 
-    synthPageButton.setColour (juce::TextButton::buttonColourId, currentPageIndex == 0 ? activeCol : inactiveCol);
-    synthPageButton.setColour (juce::TextButton::textColourOffId, currentPageIndex == 0 ? juce::Colours::black : juce::Colours::white);
-
-    fxPageButton.setColour (juce::TextButton::buttonColourId, currentPageIndex == 1 ? activeCol : inactiveCol);
-    fxPageButton.setColour (juce::TextButton::textColourOffId, currentPageIndex == 1 ? juce::Colours::black : juce::Colours::white);
+    synthPageButton.setColour (juce::TextButton::buttonOnColourId, toggleCol);
+    fxPageButton.setColour (juce::TextButton::buttonOnColourId, toggleCol);
+    
+    synthPageButton.setToggleState (currentPageIndex == 0, juce::dontSendNotification);
+    fxPageButton.setToggleState (currentPageIndex == 1, juce::dontSendNotification);
 }
 
 void HeaderBar::resized()
 {
+    updateButtonStyles();
+
     auto bounds = getLocalBounds().reduced (6, 4);
 
     bounds.removeFromLeft (130);
 
-    auto tabArea = bounds.removeFromLeft (180).reduced (0, 2);
+    auto tabArea = bounds.removeFromLeft (bounds.getWidth() / 4).reduced (0, 2);
     int tabWidth = tabArea.getWidth() / 2;
     synthPageButton.setBounds (tabArea.removeFromLeft (tabWidth).reduced (2, 0));
     fxPageButton.setBounds (tabArea.reduced (2, 0));
 
-    auto presetArea = bounds.removeFromRight (280);
-    deletePresetButton.setBounds (presetArea.removeFromRight (45).reduced (2, 2));
-    savePresetButton.setBounds (presetArea.removeFromRight (55).reduced (2, 2));
-    presetSelector.setBounds (presetArea.reduced (4, 2));
+    auto buttonArea = bounds.removeFromRight (bounds.getWidth() / 3).reduced (0, 2);
+    auto buttonWidth = buttonArea.getWidth() / 2;
+    deletePresetButton.setBounds (buttonArea.removeFromRight (buttonWidth).reduced (2, 0));
+    savePresetButton.setBounds (buttonArea.reduced (2, 0));
+    presetSelector.setBounds (bounds.reduced (4, 2));
 }
 
 void HeaderBar::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour::fromRGB (24, 27, 34));
+    g.fillAll (getLookAndFeel().findColour (OvertoneStyle::darkBackgroundColourId));
 
     g.setColour (juce::Colours::white.withAlpha (0.08f));
     g.drawHorizontalLine (getHeight() - 1, 0.0f, static_cast<float> (getWidth()));

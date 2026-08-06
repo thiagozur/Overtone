@@ -11,6 +11,8 @@ OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcess
       rack (audioProcessor.getAPVTS()), 
       keyboardComponent (audioProcessor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard)
 {
+    setLookAndFeel (&overtoneStyle);
+
     addAndMakeVisible (headerBar);
 
     headerBar.onPageSwitched = [this] (int pageIndex)
@@ -34,7 +36,7 @@ OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor() {}
 
 void OvertoneAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour::fromRGB (18, 20, 24));
+    g.fillAll (getLookAndFeel().findColour (OvertoneStyle::backgroundColourId));
 }
 
 void OvertoneAudioProcessorEditor::resized()
@@ -53,8 +55,8 @@ void OvertoneAudioProcessorEditor::resized()
         orbitNodes.setBounds (bounds.removeFromLeft (420));
         bounds.removeFromLeft (10);
 
-        envelopeGraph.setBounds (bounds.removeFromTop (210));
-        bounds.removeFromTop (10);
+        envelopeGraph.setBounds (bounds.removeFromBottom ((bounds.getHeight() - 10) / 2));
+        bounds.removeFromBottom (10);
 
         noisePanel.setBounds (bounds);
     }

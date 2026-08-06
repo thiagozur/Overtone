@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
+#include "../Styles/OvertoneStyle.h"
 
 class NoiseSource : public juce::Component, public juce::FileDragAndDropTarget
 {   
