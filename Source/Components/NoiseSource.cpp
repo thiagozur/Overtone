@@ -18,7 +18,7 @@ NoiseSource::NoiseSource (juce::AudioProcessorValueTreeState& apvtsToUse) : apvt
     noiseGainSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     addAndMakeVisible (noiseGainSlider);
 
-    noiseGainLabel.setText ("GAIN", juce::dontSendNotification);
+    noiseGainLabel.setText ("Gain", juce::dontSendNotification);
     noiseGainLabel.setFont (juce::FontOptions (10.0f, juce::Font::bold));
     noiseGainLabel.setJustificationType (juce::Justification::centred);
     noiseGainLabel.setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.7f));
@@ -34,7 +34,20 @@ NoiseSource::NoiseSource (juce::AudioProcessorValueTreeState& apvtsToUse) : apvt
     qLabel.setFont (juce::FontOptions (10.0f, juce::Font::bold));
     qLabel.setJustificationType (juce::Justification::centred);
     qLabel.setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.7f));
-    addAndMakeVisible (qLabel);    
+    addAndMakeVisible (qLabel);
+
+    directNoiseSlider.setLookAndFeel (&pctKnobStyle);
+    directNoiseAttach = std::make_unique<SliderAttachment> (apvts, "direct_noise", directNoiseSlider);
+
+    directNoiseSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
+    directNoiseSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+    addAndMakeVisible (directNoiseSlider);
+
+    directNoiseLabel.setText ("Ruido Original", juce::dontSendNotification);
+    directNoiseLabel.setFont (juce::FontOptions (10.0f, juce::Font::bold));
+    directNoiseLabel.setJustificationType (juce::Justification::centred);
+    directNoiseLabel.setColour (juce::Label::textColourId, juce::Colours::white.withAlpha (0.7f));
+    addAndMakeVisible (directNoiseLabel);
 }
 
 NoiseSource::~NoiseSource()
@@ -50,11 +63,15 @@ void NoiseSource::resized()
     noiseSelector.setBounds (dropArea.removeFromTop (36));
 
     auto knobArea = bounds;
-    int knobWidth = knobArea.getWidth() / 2;
+    int knobWidth = knobArea.getWidth() / 3;
 
     auto qArea = knobArea.removeFromLeft (knobWidth);
     qLabel.setBounds (qArea.removeFromTop (16));
     qSlider.setBounds (qArea.reduced (2));
+
+    auto directNoiseArea = knobArea.removeFromLeft (knobWidth);
+    directNoiseLabel.setBounds (directNoiseArea.removeFromTop (16));
+    directNoiseSlider.setBounds (directNoiseArea.reduced (2));
 
     auto gainArea = knobArea;
     noiseGainLabel.setBounds (gainArea.removeFromTop (16));

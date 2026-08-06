@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
-#include "../Styles/OvertoneStyle.h"
+#include "../Styles/PctKnobStyle.h"
 
 class NoiseSource : public juce::Component, public juce::FileDragAndDropTarget
 {   
@@ -19,6 +19,7 @@ public:
 
 private:
     juce::AudioProcessorValueTreeState& apvts;
+    PctKnobStyle pctKnobStyle;
 
     juce::ComboBox noiseSelector;
     juce::Slider noiseGainSlider;
@@ -27,12 +28,16 @@ private:
     juce::Slider qSlider;
     juce::Label qLabel;
 
+    juce::Slider directNoiseSlider;
+    juce::Label directNoiseLabel;
+
     using ComboAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
 
     std::unique_ptr<ComboAttachment> selectorAttach;
     std::unique_ptr<SliderAttachment> gainAttach;
     std::unique_ptr<SliderAttachment> qAttach;
+    std::unique_ptr<SliderAttachment> directNoiseAttach;
 
     bool isDraggingFileOver = false;
 

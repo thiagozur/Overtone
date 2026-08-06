@@ -37,6 +37,23 @@ OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor() {}
 void OvertoneAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (OvertoneStyle::backgroundColourId));
+
+    auto bounds = getLocalBounds();
+    bounds.removeFromTop (42); //headerBarBounds
+    bounds.reduce (10, 10);
+    bounds.removeFromBottom (70); //keyboardBounds
+    bounds.removeFromBottom (10);
+    bounds.removeFromLeft (420); //orbitNodesBounds
+    bounds.removeFromLeft (10);
+    bounds.removeFromBottom ((bounds.getHeight() - 10) / 2); //adsrBounds
+    bounds.removeFromBottom (5);
+    auto adsrTitleBounds = bounds.removeFromBottom (20).reduced (8, 0);
+    auto noiseSourceTitleBounds = bounds.removeFromTop (20).reduced (8, 0);
+
+    g.setColour (juce::Colours::white.withAlpha (0.7f));
+    g.setFont (OvertoneStyle::getMontserratFont(*this, 20.0f));
+    g.drawText ("Envolvente", adsrTitleBounds, juce::Justification::centredLeft);
+    g.drawText ("Fuente de Ruido", noiseSourceTitleBounds, juce::Justification::centredLeft);
 }
 
 void OvertoneAudioProcessorEditor::resized()
@@ -56,7 +73,11 @@ void OvertoneAudioProcessorEditor::resized()
         bounds.removeFromLeft (10);
 
         envelopeGraph.setBounds (bounds.removeFromBottom ((bounds.getHeight() - 10) / 2));
+        bounds.removeFromBottom (5);
+        bounds.removeFromBottom (20); //adsrTitleBounds
         bounds.removeFromBottom (10);
+        bounds.removeFromTop (20); //noiseSourceTitleBounds
+        bounds.removeFromTop (5);
 
         noisePanel.setBounds (bounds);
     }

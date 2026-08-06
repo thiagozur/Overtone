@@ -160,12 +160,12 @@ void HeaderBar::resized()
 
     bounds.removeFromLeft (130);
 
-    auto tabArea = bounds.removeFromLeft (bounds.getWidth() / 4).reduced (0, 2);
+    auto tabArea = bounds.removeFromLeft (bounds.getWidth() / 4 + 20).reduced (0, 2);
     int tabWidth = tabArea.getWidth() / 2;
     synthPageButton.setBounds (tabArea.removeFromLeft (tabWidth).reduced (2, 0));
     fxPageButton.setBounds (tabArea.reduced (2, 0));
 
-    auto buttonArea = bounds.removeFromRight (bounds.getWidth() / 3).reduced (0, 2);
+    auto buttonArea = bounds.removeFromRight (bounds.getWidth() / 3 + 20).reduced (0, 2);
     auto buttonWidth = buttonArea.getWidth() / 2;
     deletePresetButton.setBounds (buttonArea.removeFromRight (buttonWidth).reduced (2, 0));
     savePresetButton.setBounds (buttonArea.reduced (2, 0));
@@ -179,7 +179,7 @@ void HeaderBar::paint (juce::Graphics& g)
     g.setColour (juce::Colours::white.withAlpha (0.08f));
     g.drawHorizontalLine (getHeight() - 1, 0.0f, static_cast<float> (getWidth()));
 
-    g.setColour (juce::Colours::white);
-    g.setFont (juce::FontOptions (18.0f, juce::Font::bold));
+    g.setColour (juce::Colours::white.withAlpha (0.7f));
+    g.setFont (OvertoneStyle::getMontserratFont (*this, 24.0f));
     g.drawText ("OVERTONE", 10, 0, 120, getHeight(), juce::Justification::centredLeft);
 }

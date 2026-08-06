@@ -2,6 +2,30 @@
 
 OvertoneStyle::OvertoneStyle()
 {
+    montserratTypeface = juce::Typeface::createSystemTypefaceFor (
+        BinaryData::MontserratBold_ttf,
+        BinaryData::MontserratBold_ttfSize
+    );
+
+    if (montserratTypeface != nullptr)
+        montserrat = juce::FontOptions (montserratTypeface).withHeight (18.0f);
+
+    syneTypeface = juce::Typeface::createSystemTypefaceFor (
+        BinaryData::SyneBold_ttf,
+        BinaryData::SyneBold_ttfSize
+    );
+
+    if (syneTypeface != nullptr)
+        syne = juce::FontOptions (syneTypeface).withHeight (12.0f);
+
+    syneBoldTypeface = juce::Typeface::createSystemTypefaceFor (
+        BinaryData::SyneExtraBold_ttf,
+        BinaryData::SyneExtraBold_ttfSize
+    );
+
+    if (syneBoldTypeface != nullptr)
+        syneBold = juce::FontOptions (syneBoldTypeface).withHeight (12.0f);
+    
     setColour (juce::Slider::thumbColourId, juce::Colour (0xFF00A0D2));
     setColour (juce::Slider::rotarySliderFillColourId, juce::Colour (0xFF00A0D2));
     setColour (juce::Slider::rotarySliderOutlineColourId, juce::Colour (0xFF2A2A30));
@@ -33,9 +57,8 @@ void OvertoneStyle::drawLabel (juce::Graphics& g, juce::Label& label)
     if (! label.isBeingEdited())
     {
         auto alpha = label.isEnabled() ? 1.0f : 0.5f;
-        const juce::Font font (juce::FontOptions (14.0f, juce::Font::bold));
 
-        g.setFont (font);
+        g.setFont (syne.withHeight (16.0f));
         g.setColour (juce::Colours::white.withAlpha (0.8f).withMultipliedAlpha (alpha));
 
         auto area = label.getLocalBounds().toFloat();
@@ -67,7 +90,7 @@ void OvertoneStyle::drawRotarySlider (juce::Graphics& g, int x, int y, int width
         g.drawLine (juce::Line<float> (innerPoint, outerPoint), 1.5f);
     }
 
-    g.setFont (12.0f);
+    g.setFont (syne.withHeight (12.0f));
     g.setColour (juce::Colours::white.withAlpha (0.8f));
 
     auto minPoint = juce::Point<float> (centreX + (radius + 12.0f) * std::sin (rotaryStartAngle), centreY - (radius + 12.0f) * std::cos (rotaryStartAngle));
@@ -79,7 +102,7 @@ void OvertoneStyle::drawRotarySlider (juce::Graphics& g, int x, int y, int width
     auto knobRadius = radius * 0.75f;
     auto knobBounds = juce::Rectangle<float> (centreX - knobRadius, centreY - knobRadius, knobRadius * 2.0f, knobRadius * 2.0f);
 
-    juce::Colour knobBaseColour (0XFFD4BB81);
+    juce::Colour knobBaseColour (0XFFF5EBD3);
     g.setColour (knobBaseColour);
     g.fillEllipse (knobBounds);
 
@@ -106,7 +129,7 @@ void OvertoneStyle::drawRotarySlider (juce::Graphics& g, int x, int y, int width
         if (valueText.isEmpty())
             valueText = juce::String (slider.getValue(), 1);
         
-        juce::Font tooltipFont (juce::FontOptions (11.0f, juce::Font::bold));
+        juce::Font tooltipFont (syne.withHeight (11.0f));
         g.setFont (tooltipFont);
         
         juce::GlyphArrangement glyphs;
@@ -186,9 +209,8 @@ void OvertoneStyle::drawButtonBackground (juce::Graphics& g, juce::Button& butto
 void OvertoneStyle::drawButtonText (juce::Graphics& g, juce::TextButton& button, bool /* shouldDrawButtonAsHighlighted */, bool /* shouldDrawButtonAsDown */)
 {
     auto area = button.getLocalBounds().toFloat();
-    
-    const juce::Font font (juce::FontOptions (14.0f, juce::Font::bold));
-    g.setFont (font);
+
+    g.setFont (syne.withHeight (16.0f));
 
     auto alpha = button.isEnabled() ? 1.0f : 0.5f;
     g.setColour (juce::Colours::white.withAlpha (0.8f).withMultipliedAlpha (alpha));

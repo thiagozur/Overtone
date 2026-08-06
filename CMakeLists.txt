@@ -64,6 +64,9 @@ juce_add_binary_data(FactoryAudioData
         Resources/Noise/river.wav
         Resources/Noise/vhs.wav
         Resources/Noise/vinyl.wav
+        Resources/Fonts/Montserrat-Bold.ttf
+        Resources/Fonts/Syne-Bold.ttf
+        Resources/Fonts/Syne-ExtraBold.ttf
 )
 
 target_link_libraries(Overtone

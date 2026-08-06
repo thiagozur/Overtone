@@ -25,4 +25,37 @@ public:
     void drawButtonBackground (juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
 
     void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
+
+    juce::FontOptions montserrat;
+    juce::FontOptions syne;
+    juce::FontOptions syneBold;
+
+    static juce::Font getMontserratFont (juce::Component& comp, float height)
+    {
+        if (auto* style = dynamic_cast<OvertoneStyle*> (&comp.getLookAndFeel()))
+            return style->montserrat.withHeight (height);
+
+        return juce::Font (juce::FontOptions().withHeight (height));
+    }
+
+    static juce::Font getSyneFont (juce::Component& comp, float height)
+    {
+        if (auto* style = dynamic_cast<OvertoneStyle*> (&comp.getLookAndFeel()))
+            return style->syne.withHeight (height);
+
+        return juce::Font (juce::FontOptions().withHeight (height));
+    }
+
+    static juce::Font getSyneBoldFont (juce::Component& comp, float height)
+    {
+        if (auto* style = dynamic_cast<OvertoneStyle*> (&comp.getLookAndFeel()))
+            return style->syneBold.withHeight (height);
+
+        return juce::Font (juce::FontOptions().withHeight (height));
+    }    
+
+private:
+    juce::Typeface::Ptr montserratTypeface;
+    juce::Typeface::Ptr syneTypeface;
+    juce::Typeface::Ptr syneBoldTypeface;
 };

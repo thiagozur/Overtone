@@ -24,6 +24,7 @@ OvertoneAudioProcessor::OvertoneAudioProcessor()
 {
     masterGainParam = apvts.getRawParameterValue ("master_gain");
     qParam = apvts.getRawParameterValue ("resonance_q");
+    directNoiseParam = apvts.getRawParameterValue ("direct_noise");
     attackParam = apvts.getRawParameterValue ("attack");
     decayParam = apvts.getRawParameterValue ("decay");
     sustainParam = apvts.getRawParameterValue ("sustain");
@@ -66,6 +67,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         "Noise Source",
         sourceChoices,
         0
+    ));
+
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { "direct_noise", 1 },
+        "Ruido Original",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f
     ));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat>(
@@ -399,6 +407,7 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     }
 
     float targetQ = qParam->load();
+    float directNoise = directNoiseParam->load();
     float targetWidth = widthParam->load();
     float reverbSize = reverbSizeParam->load();
     float reverbMix = reverbMixParam->load();
@@ -509,6 +518,18 @@ void OvertoneAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     }
 
     currentEnvelopeLevel.store (maxBlockEnvelope);
+
+    if (directNoise > 0.001f && maxBlockEnvelope > 0.001)
+    {
+        auto* noiseL = noiseBuffer.getReadPointer (0);
+        auto* noiseR = noiseBuffer.getReadPointer (1);
+
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            leftChannel[sample] += noiseL[sample] * directNoise * maxBlockEnvelope * 0.2f;
+            rightChannel[sample] += noiseR[sample] * directNoise * maxBlockEnvelope * 0.2f;
+        }
+    }
 
     if (chorusAmount > 0.001f)
     {

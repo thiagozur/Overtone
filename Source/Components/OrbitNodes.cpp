@@ -175,8 +175,14 @@ void OrbitNodes::paint (juce::Graphics& g)
 
         juce::Colour textCol = isActive ? (nodes[i].isDragging ? getLookAndFeel().findColour (OvertoneStyle::accentColourId).brighter (0.3f) : getLookAndFeel().findColour (OvertoneStyle::accentColourId)) : juce::Colours::white.withAlpha (0.4f);
         g.setColour (textCol);
-        g.setFont (juce::FontOptions (14.0f, isActive ? juce::Font::bold : juce::Font::plain));
-        g.drawText (juce::String (i + 1), badgeBounds, juce::Justification::centred, false);
+        g.setFont (OvertoneStyle::getSyneFont (*this, 14.0f));
+
+        if ((i + 1) == 6 || (i + 1) == 8)
+            g.drawText (juce::String (i + 1), badgeBounds, juce::Justification::centred, false);
+        else if ((i + 1) == 1 || (i + 1) == 2)
+            g.drawText (juce::String (i + 1), badgeBounds.translated (0, -1.0f), juce::Justification::centred, false);
+        else
+            g.drawText (juce::String (i + 1), badgeBounds.translated (0, -2.0f), juce::Justification::centred, false);
     }
 
     float coreRadius = juce::jmap (envelopeLevel, 0.0f, 1.0f, 6.0f, 18.0f);

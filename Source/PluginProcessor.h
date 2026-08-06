@@ -154,6 +154,7 @@ private:
     std::atomic<float>* widthParam { nullptr };
     std::atomic<float>* qParam { nullptr };
     std::atomic<float>* masterGainParam { nullptr };
+    std::atomic<float>* directNoiseParam { nullptr };
 
     double currentSampleRate = 44100.0;
 

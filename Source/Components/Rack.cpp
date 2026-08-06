@@ -6,7 +6,7 @@ Rack::Rack (juce::AudioProcessorValueTreeState& apvtsToUse) : apvts (apvtsToUse)
     driveAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "drive", driveSlider);
 
     widthSlider.setLookAndFeel (&pctKnobStyle);
-    setupRotarySlider (widthSlider, widthLabel, "Detune Spread");
+    setupRotarySlider (widthSlider, widthLabel, "Wide Detune");
     widthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (apvts, "stereo_width", widthSlider);
 
     chorusSlider.setLookAndFeel (&pctKnobStyle);
@@ -58,7 +58,7 @@ void Rack::drawRackModule (juce::Graphics& g, juce::Rectangle<int> area, const j
     g.fillEllipse (bounds.getRight() - 16.0f, bounds.getCentreY() - 4.0f, 8.0f, 8.0f);
 
     g.setColour (juce::Colours::white.withAlpha (0.8f));
-    g.setFont (juce::FontOptions (13.0f, juce::Font::bold));
+    g.setFont (OvertoneStyle::getMontserratFont(*this, 15.0f));
     g.drawText (title.toUpperCase(), static_cast<int>(bounds.getX() + 30.0f), static_cast<int>(bounds.getY() + 10.0f), 200, 20, juce::Justification::left);
 
     g.setColour (juce::Colours::white.withAlpha (0.05f));

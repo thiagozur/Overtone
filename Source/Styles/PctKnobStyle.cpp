@@ -41,7 +41,7 @@ void PctKnobStyle::drawRotarySlider (juce::Graphics& g, int x, int y, int width,
     auto knobRadius = radius * 0.75f;
     auto knobBounds = juce::Rectangle<float> (centreX - knobRadius, centreY - knobRadius, knobRadius * 2.0f, knobRadius * 2.0f);
 
-    juce::Colour knobBaseColour (0XFFD4BB81);
+    juce::Colour knobBaseColour (0XFFF5EBD3);
     g.setColour (knobBaseColour);
     g.fillEllipse (knobBounds);
 
