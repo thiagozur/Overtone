@@ -51,6 +51,8 @@ target_sources(Overtone PRIVATE
     Source/Components/HeaderBar.cpp
     Source/Components/Rack.h
     Source/Components/Rack.cpp
+    Source/Components/OvertoneKeyboard.h
+    Source/Components/OvertoneKeyboard.cpp
     Source/Styles/OvertoneStyle.h
     Source/Styles/OvertoneStyle.cpp
     Source/Styles/PctKnobStyle.h

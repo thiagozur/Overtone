@@ -7,6 +7,7 @@
 #include "Components/EnvelopeGraph.h"
 #include "Components/NoiseSource.h"
 #include "Components/Rack.h"
+#include "Components/OvertoneKeyboard.h"
 #include "Styles/OvertoneStyle.h"
 
 class OvertoneAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -29,7 +30,7 @@ private:
     NoiseSource noisePanel;
     Rack rack;
 
-    juce::MidiKeyboardComponent keyboardComponent;
+    OvertoneKeyboard keyboardComponent;
 
     void updatePageVisibility (int pageIndex);
 

@@ -1,4 +1,4 @@
-#include "Rack.h"
+﻿#include "Rack.h"
 
 Rack::Rack (juce::AudioProcessorValueTreeState& apvtsToUse) : apvts (apvtsToUse)
 {
@@ -59,7 +59,7 @@ void Rack::drawRackModule (juce::Graphics& g, juce::Rectangle<int> area, const j
 
     g.setColour (juce::Colours::white.withAlpha (0.8f));
     g.setFont (OvertoneStyle::getMontserratFont(*this, 15.0f));
-    g.drawText (title.toUpperCase(), static_cast<int>(bounds.getX() + 30.0f), static_cast<int>(bounds.getY() + 10.0f), 200, 20, juce::Justification::left);
+    g.drawText (title, static_cast<int>(bounds.getX() + 30.0f), static_cast<int>(bounds.getY() + 10.0f), 200, 20, juce::Justification::left);
 
     g.setColour (juce::Colours::white.withAlpha (0.05f));
     g.drawHorizontalLine (static_cast<int>(bounds.getY() + 32.0f), bounds.getX() + 30.0f, bounds.getRight() - 30.0f);
@@ -74,17 +74,17 @@ void Rack::paint (juce::Graphics& g)
     int moduleHeight = (bounds.getHeight() - (gap * 2)) / 3;
 
     auto driveArea = bounds.removeFromTop (moduleHeight);
-    drawRackModule (g, driveArea, "01. Soft Clipping");
+    drawRackModule (g, driveArea, "01. SOFT CLIPPING");
 
     bounds.removeFromTop (gap);
 
     auto widthArea = bounds.removeFromTop (moduleHeight);
-    drawRackModule (g, widthArea, "02. Modulation");
+    drawRackModule (g, widthArea, "02. MODULACIÓN");
 
     bounds.removeFromTop (gap);
 
     auto reverbArea = bounds;
-    drawRackModule (g, reverbArea, "03. Shimmer Reverb");
+    drawRackModule (g, reverbArea, "03. SHIMMER REVERB");
 }
 
 void Rack::resized()

@@ -29,7 +29,7 @@ void PctKnobStyle::drawRotarySlider (juce::Graphics& g, int x, int y, int width,
         g.drawLine (juce::Line<float> (innerPoint, outerPoint), 1.5f);
     }
 
-    g.setFont (12.0f);
+    g.setFont (syne.withHeight (12.0f));
     g.setColour (juce::Colours::white.withAlpha (0.8f));
 
     auto minPoint = juce::Point<float> (centreX + (radius + 12.0f) * std::sin (rotaryStartAngle), centreY - (radius + 12.0f) * std::cos (rotaryStartAngle));
@@ -68,7 +68,7 @@ void PctKnobStyle::drawRotarySlider (juce::Graphics& g, int x, int y, int width,
         if (valueText.isEmpty())
             valueText = juce::String (slider.getValue(), 1);
         
-        juce::Font tooltipFont (juce::FontOptions (11.0f, juce::Font::bold));
+        juce::Font tooltipFont (syne.withHeight (11.0f));
         g.setFont (tooltipFont);
         
         juce::GlyphArrangement glyphs;

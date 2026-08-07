@@ -25,11 +25,12 @@ OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcess
     addAndMakeVisible (noisePanel);
 
     addAndMakeVisible (keyboardComponent);
-    keyboardComponent.setKeyWidth (22.0f);
+    keyboardComponent.setAvailableRange (36, 96);
+    keyboardComponent.setScrollButtonsVisible (false);
 
     addAndMakeVisible (rack);
 
-    setSize (850, 620);
+    setSize (850, 650);
 }
 
 OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor() {}
@@ -41,7 +42,7 @@ void OvertoneAudioProcessorEditor::paint (juce::Graphics& g)
     auto bounds = getLocalBounds();
     bounds.removeFromTop (42); //headerBarBounds
     bounds.reduce (10, 10);
-    bounds.removeFromBottom (70); //keyboardBounds
+    bounds.removeFromBottom (90); //keyboardBounds
     bounds.removeFromBottom (10);
     bounds.removeFromLeft (420); //orbitNodesBounds
     bounds.removeFromLeft (10);
@@ -64,7 +65,13 @@ void OvertoneAudioProcessorEditor::resized()
 
     bounds.reduce (10, 10);
 
-    keyboardComponent.setBounds (bounds.removeFromBottom (70));
+    auto keyboardArea = bounds.removeFromBottom (90).reduced (48, 6);
+    keyboardComponent.setBounds (keyboardArea);
+
+    constexpr float numWhiteKeys = 36.0f;
+    float keyWidth = static_cast<float>(keyboardArea.getWidth()) / numWhiteKeys;
+    keyboardComponent.setKeyWidth (keyWidth);
+
     bounds.removeFromBottom (10);
 
     if (headerBar.getCurrentPageIndex() == 0)
