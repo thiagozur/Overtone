@@ -1,27 +1,28 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
+#include "../PluginProcessor.h"
 #include "../Styles/PctKnobStyle.h"
 
-class NoiseSource : public juce::Component, public juce::FileDragAndDropTarget
+class NoiseSource : public juce::Component
 {   
 public:
-    NoiseSource (juce::AudioProcessorValueTreeState& apvtsToUse);
+    NoiseSource (OvertoneAudioProcessor& p, juce::AudioProcessorValueTreeState& apvtsToUse);
     ~NoiseSource() override;
 
     void paint (juce::Graphics& g) override;
     void resized() override;
 
-    bool isInterestedInFileDrag (const juce::StringArray& files) override;
-    void fileDragMove (const juce::StringArray& files, int x, int y) override;
-    void fileDragExit (const juce::StringArray& files) override;
-    void filesDropped (const juce::StringArray& files, int x, int y) override;
-
 private:
+    OvertoneAudioProcessor& processor;
     juce::AudioProcessorValueTreeState& apvts;
     PctKnobStyle pctKnobStyle;
 
     juce::ComboBox noiseSelector;
+    juce::TextButton importNoiseButton { "Importar ruido " };
+    void importButtonClicked();
+    std::unique_ptr<juce::FileChooser> fileChooser;
+
     juce::Slider noiseGainSlider;
     juce::Label noiseGainLabel;
 
@@ -38,8 +39,6 @@ private:
     std::unique_ptr<SliderAttachment> gainAttach;
     std::unique_ptr<SliderAttachment> qAttach;
     std::unique_ptr<SliderAttachment> directNoiseAttach;
-
-    bool isDraggingFileOver = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NoiseSource)
 };

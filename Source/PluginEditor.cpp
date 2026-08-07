@@ -7,7 +7,7 @@ OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcess
       headerBar (audioProcessor.getAPVTS(), audioProcessor.getPresetManager()),
       orbitNodes (audioProcessor),
       envelopeGraph (audioProcessor.getAPVTS()),
-      noisePanel (audioProcessor.getAPVTS()),
+      noisePanel (audioProcessor, audioProcessor.getAPVTS()),
       rack (audioProcessor.getAPVTS()), 
       keyboardComponent (audioProcessor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard)
 {

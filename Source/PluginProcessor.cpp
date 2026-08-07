@@ -1,4 +1,5 @@
-﻿#include "PluginProcessor.h"
+﻿
+#include "PluginProcessor.h"
 #include "PluginEditor.h"
 
 inline float fastTanh (float x) noexcept
@@ -57,8 +58,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         "Bosque",
         "Lluvia",
         "Arroyo",
+        "Fuego",
+        "Olas",
+        "Proyector",
         "VHS",
         "Vinilo",
+        "Ruido Blanco",
+        "Ruido Browniano",
         "Ruido Importado"
     };
 
@@ -66,7 +72,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         juce::ParameterID { "noise_source", 1 },
         "Noise Source",
         sourceChoices,
-        0
+        2
     ));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat>(
@@ -80,7 +86,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         juce::ParameterID { "drive", 1 },
         "Drive",
         juce::NormalisableRange<float>(1.0f, 10.0f, 0.1f, 0.5f),
-        1.5f
+        1.0f
     ));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat>(
@@ -95,7 +101,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         juce::ParameterID { "resonance_q", 1 },
         "Resonance (Q)",
         juce::NormalisableRange<float>(5.0f, 150.0f, 0.1f, 0.4f),
-        50.0f
+        100.0f
     ));
 
     for (int i = 0; i < numHarmonics; ++i)
@@ -157,7 +163,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout OvertoneAudioProcessor::crea
         juce::ParameterID { "reverb_mix", 1 },
         "Reverb Mix",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.3f
+        0.0f
     ));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat>(
@@ -201,23 +207,38 @@ void OvertoneAudioProcessor::updateNoiseSourceSelection (int choice)
             factorySamplePlayer.loadFromMemory (BinaryData::river_wav, BinaryData::river_wavSize, currentSampleRate);
             break;
         case 3:
-            factorySamplePlayer.loadFromMemory (BinaryData::vhs_wav, BinaryData::vhs_wavSize, currentSampleRate);
+            factorySamplePlayer.loadFromMemory (BinaryData::fire_wav, BinaryData::fire_wavSize, currentSampleRate);
             break;
         case 4:
-            factorySamplePlayer.loadFromMemory (BinaryData::vinyl_wav, BinaryData::vinyl_wavSize, currentSampleRate);
+            factorySamplePlayer.loadFromMemory (BinaryData::waves_wav, BinaryData::waves_wavSize, currentSampleRate);
             break;
         case 5:
+            factorySamplePlayer.loadFromMemory (BinaryData::projector_wav, BinaryData::projector_wavSize, currentSampleRate);
+            break;
+        case 6:
+            factorySamplePlayer.loadFromMemory (BinaryData::vhs_wav, BinaryData::vhs_wavSize, currentSampleRate);
+            break;
+        case 7:
+            factorySamplePlayer.loadFromMemory (BinaryData::vinyl_wav, BinaryData::vinyl_wavSize, currentSampleRate);
+            break;
+        case 8:
+            factorySamplePlayer.loadFromMemory (BinaryData::white_noise_wav, BinaryData::white_noise_wavSize, currentSampleRate);
+            break;
+        case 9:
+            factorySamplePlayer.loadFromMemory (BinaryData::brown_noise_wav, BinaryData::brown_noise_wavSize, currentSampleRate);
+            break;
+        case 10:
             break;
     }
 }
 
 void OvertoneAudioProcessor::getNoiseSample (float& noiseL, float& noiseR, int sourceChoice)
 {
-    if (sourceChoice >= 0 && sourceChoice <= 4)
+    if (sourceChoice >= 0 && sourceChoice <= 9)
     {
         factorySamplePlayer.getNextSample (noiseL, noiseR);
     }
-    else if (sourceChoice == 5 && customSamplePlayer.hasSampleLoaded())
+    else if (sourceChoice == 10 && customSamplePlayer.hasSampleLoaded())
     {
         customSamplePlayer.getNextSample (noiseL, noiseR);
     }

@@ -66,6 +66,11 @@ juce_add_binary_data(FactoryAudioData
         Resources/Noise/river.wav
         Resources/Noise/vhs.wav
         Resources/Noise/vinyl.wav
+        Resources/Noise/waves.wav
+        Resources/Noise/fire.wav
+        Resources/Noise/projector.wav
+        Resources/Noise/brown_noise.wav
+        Resources/Noise/white_noise.wav
         Resources/Fonts/Montserrat-Bold.ttf
         Resources/Fonts/Syne-Bold.ttf
         Resources/Fonts/Syne-ExtraBold.ttf

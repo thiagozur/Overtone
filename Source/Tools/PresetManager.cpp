@@ -37,19 +37,57 @@ void PresetManager::loadFactoryPresets()
     initPreset.isFactory = true;
     presets.push_back (initPreset);
 
+    Preset riverPadSoft;
+    riverPadSoft.name = "Arroyo Pad Soft";
+    riverPadSoft.isFactory = true;
+
+    /* Preset forestPad;
+    forestPad.name = "Forest Pad";
+    forestPad.isFactory = true;
+
     Preset forestPad;
     forestPad.name = "Forest Pad";
     forestPad.isFactory = true;
 
-    juce::ValueTree vt = apvts.copyState().createCopy();
+    Preset forestPad;
+    forestPad.name = "Forest Pad";
+    forestPad.isFactory = true;
 
-    setParamValue (vt, "noise_source", 0.0f);
-    setParamValue (vt, "resonance_q", 100.0f);
-    setParamValue (vt, "reverb_mix", 0.5f);
-    setParamValue (vt, "shimmer_amount", 0.4f);
+    Preset forestPad;
+    forestPad.name = "Forest Pad";
+    forestPad.isFactory = true;
 
-    forestPad.state = vt;
-    presets.push_back (forestPad);
+    Preset forestPad;
+    forestPad.name = "Forest Pad";
+    forestPad.isFactory = true; */
+
+    juce::ValueTree vt1 = apvts.copyState().createCopy();
+    juce::ValueTree vt2 = apvts.copyState().createCopy();
+    juce::ValueTree vt3 = apvts.copyState().createCopy();
+    juce::ValueTree vt4 = apvts.copyState().createCopy();
+    juce::ValueTree vt5 = apvts.copyState().createCopy();
+    juce::ValueTree vt6 = apvts.copyState().createCopy();
+
+    setParamValue (vt1, "noise_source", 2.0f);
+    setParamValue (vt1, "harmonic_gain_1", 1.0f);
+    setParamValue (vt1, "harmonic_gain_2", 0.4f);
+    setParamValue (vt1, "harmonic_gain_3", 0.7f);
+    setParamValue (vt1, "harmonic_gain_4", 0.95f);
+    setParamValue (vt1, "harmonic_gain_5", 0.5f);
+    setParamValue (vt1, "harmonic_gain_6", 0.4f);
+    setParamValue (vt1, "harmonic_gain_7", 0.5f);
+    setParamValue (vt1, "harmonic_gain_8", 0.2f);
+    setParamValue (vt1, "direct_noise", 0.05f);
+    setParamValue (vt1, "resonance_q", 150.0f);
+    setParamValue (vt1, "attack", 1.5f);
+    setParamValue (vt1, "sustain", 1.0f);
+    setParamValue (vt1, "release", 0.75f);
+    setParamValue (vt1, "stereo_width", 0.002f);
+    setParamValue (vt1, "reverb_mix", 0.45f);
+    setParamValue (vt1, "shimmer_amount", 0.25f);
+    setParamValue (vt1, "reverb_size", 0.75f);
+    riverPadSoft.state = vt1;
+    presets.push_back (riverPadSoft);
 }
 
 void PresetManager::updatePresetList()

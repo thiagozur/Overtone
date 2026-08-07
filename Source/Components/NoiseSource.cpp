@@ -1,16 +1,24 @@
 ﻿#include "NoiseSource.h"
 
-NoiseSource::NoiseSource (juce::AudioProcessorValueTreeState& apvtsToUse) : apvts (apvtsToUse)
+NoiseSource::NoiseSource (OvertoneAudioProcessor& p, juce::AudioProcessorValueTreeState& apvtsToUse) : processor (p), apvts (apvtsToUse)
 {
     noiseSelector.addItem ("Bosque", 1);
     noiseSelector.addItem ("Lluvia", 2);
     noiseSelector.addItem ("Arroyo", 3);
-    noiseSelector.addItem ("VHS", 4);
-    noiseSelector.addItem ("Vinilo", 5);
-    noiseSelector.addItem ("Ruido Importado", 6);
+    noiseSelector.addItem ("Fuego", 4);
+    noiseSelector.addItem ("Olas", 5);
+    noiseSelector.addItem ("Proyector", 6);
+    noiseSelector.addItem ("VHS", 7);
+    noiseSelector.addItem ("Vinilo", 8);
+    noiseSelector.addItem ("Ruido Blanco", 9);
+    noiseSelector.addItem ("Ruido Browniano", 10);
+    noiseSelector.addItem ("Ruido Importado", 11);
     addAndMakeVisible (noiseSelector);
 
     selectorAttach = std::make_unique<ComboAttachment> (apvts, "noise_source", noiseSelector);
+
+    importNoiseButton.onClick = [this] { importButtonClicked(); };
+    addAndMakeVisible (importNoiseButton);
 
     gainAttach = std::make_unique<SliderAttachment> (apvts, "master_gain", noiseGainSlider);
 
@@ -55,12 +63,37 @@ NoiseSource::~NoiseSource()
 
 }
 
+void NoiseSource::importButtonClicked()
+{
+    fileChooser = std::make_unique<juce::FileChooser> (
+        "Seleccionar archivo de ruido WAV",
+        juce::File::getSpecialLocation (juce::File::userHomeDirectory),
+        "*.wav"
+    );
+
+    auto fileChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+
+    fileChooser->launchAsync (fileChooserFlags, [this] (const juce::FileChooser& fc)
+    {
+        auto file = fc.getResult();
+        if (file.existsAsFile())
+        {
+            if (processor.loadCustomNoiseFile (file))
+                noiseSelector.setSelectedId (11, juce::sendNotificationSync);
+        }
+    });
+}
+
 void NoiseSource::resized()
 {
     auto bounds = getLocalBounds().reduced (8);
 
-    auto dropArea = bounds.removeFromTop (bounds.getHeight() / 3);
-    noiseSelector.setBounds (dropArea.removeFromTop (36));
+    auto selectionArea = bounds.removeFromTop (bounds.getHeight() / 3);
+    auto selectionControlsArea = selectionArea.removeFromTop (35);
+    auto noiseSelectorArea = selectionControlsArea.removeFromLeft (selectionControlsArea.getWidth() / 2 - 5);
+    noiseSelector.setBounds (noiseSelectorArea);
+    selectionControlsArea.removeFromLeft (10);
+    importNoiseButton.setBounds (selectionControlsArea);
 
     auto knobArea = bounds;
     int knobWidth = knobArea.getWidth() / 3;
@@ -85,56 +118,7 @@ void NoiseSource::paint (juce::Graphics& g)
     g.setColour (getLookAndFeel().findColour (OvertoneStyle::darkBackgroundColourId));
     g.fillRoundedRectangle (bounds, 4.0f);
 
-    g.setColour (isDraggingFileOver ? juce::Colour::fromRGB (80, 200, 255) : juce::Colours::white.withAlpha (0.08f));
-    g.drawRoundedRectangle (bounds, 4.0f, isDraggingFileOver ? 2.0f : 1.0f);
-
-    if (isDraggingFileOver)
-    {
-        g.setColour (juce::Colour::fromRGBA (80, 200, 255, 30));
-        g.fillRoundedRectangle (bounds, 4.0f);
-        g.setColour (juce::Colours::white);
-        g.setFont (juce::FontOptions (12.0f, juce::Font::bold));
-        g.drawText ("Soltar WAV aquí", getLocalBounds(), juce::Justification::centred);
-    }
+    g.setColour (juce::Colours::white.withAlpha (0.08f));
+    g.drawRoundedRectangle (bounds, 4.0f, 1.0f);
 }
 
-bool NoiseSource::isInterestedInFileDrag (const juce::StringArray& files)
-{
-    for (const auto& file : files)
-    {
-        if (file.endsWithIgnoreCase (".wav"))
-            return true;
-    }
-    return false;
-}
-
-void NoiseSource::fileDragMove (const juce::StringArray& /* files */, int /* x */, int /* y */)
-{
-    if (! isDraggingFileOver)
-    {
-        isDraggingFileOver = true;
-        repaint();
-    }
-}
-
-void NoiseSource::fileDragExit (const juce::StringArray& /* files */)
-{
-    isDraggingFileOver = false;
-    repaint();
-}
-
-void NoiseSource::filesDropped (const juce::StringArray& files, int /* x */, int /* y */)
-{
-    isDraggingFileOver = false;
-    repaint();
-
-    for (const auto& filePath : files)
-    {
-        if (filePath.endsWithIgnoreCase (".wav"))
-        {
-            juce::File customFile (filePath);
-            noiseSelector.setSelectedId (6, juce::sendNotificationSync);
-            break;
-        }
-    }
-}
