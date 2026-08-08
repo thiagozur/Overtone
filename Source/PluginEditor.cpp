@@ -11,6 +11,7 @@ OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcess
       rack (audioProcessor.getAPVTS()), 
       keyboardComponent (audioProcessor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard)
 {
+    juce::LookAndFeel::setDefaultLookAndFeel (&overtoneStyle);
     setLookAndFeel (&overtoneStyle);
 
     addAndMakeVisible (headerBar);
@@ -33,7 +34,10 @@ OvertoneAudioProcessorEditor::OvertoneAudioProcessorEditor (OvertoneAudioProcess
     setSize (850, 650);
 }
 
-OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor() {}
+OvertoneAudioProcessorEditor::~OvertoneAudioProcessorEditor()
+{
+    juce::LookAndFeel::setDefaultLookAndFeel (nullptr);
+}
 
 void OvertoneAudioProcessorEditor::paint (juce::Graphics& g)
 {

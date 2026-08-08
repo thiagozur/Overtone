@@ -31,7 +31,9 @@ HeaderBar::HeaderBar (juce::AudioProcessorValueTreeState& apvtsToUse, PresetMana
     savePresetButton.onClick = [this]
     {
         auto textWindow = std::make_unique<juce::AlertWindow> ("Guardar Preset", "Introducir nombre:", juce::MessageBoxIconType::NoIcon, this);
-        textWindow->addTextEditor ("presetName", "Mi preset", "Nombre:");
+        textWindow->setLookAndFeel (&getLookAndFeel());
+        textWindow->setOpaque (false);
+        textWindow->addTextEditor ("presetName", "Nombre Preset");
         textWindow->addButton ("Guardar", 1, juce::KeyPress (juce::KeyPress::returnKey));
         textWindow->addButton ("Cancelar", 0, juce::KeyPress (juce::KeyPress::escapeKey));
 
